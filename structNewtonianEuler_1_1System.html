@@ -1,0 +1,286 @@
+<!-- HTML header for doxygen 1.8.10-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=9"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="SXS Collaboration">
+    <meta name="generator" content="Doxygen 1.8.13"/>
+    <style>
+        /*!
+         * IE10 viewport hack for Surface/desktop Windows 8 bug
+         * Copyright 2014-2015 Twitter, Inc.
+         * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+         */
+        @-webkit-viewport { width: device-width; }
+        @-moz-viewport    { width: device-width; }
+        @-ms-viewport     { width: device-width; }
+        @-o-viewport      { width: device-width; }
+        @viewport         { width: device-width; }
+      </style>
+  <title>SpECTRE: NewtonianEuler::System&lt; Dim, EquationOfStateType &gt; Struct Template Reference</title>
+  <link href="tabs.css" rel="stylesheet" type="text/css"/>
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="dynsections.js"></script>
+  <link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js", "TeX/AMSmath.js", "TeX/AMSsymbols.js", "color.js"],
+    jax: ["input/TeX","output/HTML-CSS"],
+});
+MathJax.Hub.Config({
+    TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+MathJax.Hub.Config({
+    tex2jax: {inlineMath: [['^^','^^'], ['\\(', '\\)']]}
+});
+</script><script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js"></script>
+  <link href="octicons.css" rel="stylesheet">
+  <link href="bootstrap.min.css" rel="stylesheet">
+  <link href="doxygen.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="jquery.js"></script>
+  <script type="text/javascript" src="popper.min.js"></script>
+  <script type="text/javascript" src="bootstrap.min.js"></script>
+  <script type="text/javascript" src="spectre.js"></script>
+  </head>
+  <body>
+  <div id="top" class="navbar-fixed-top"><!-- do not remove this div, it is closed by doxygen! -->
+  <!-- BEGIN TITLEAREA -->
+  <div id="titlearea">
+  <script type="text/javascript">
+  var searchBox = new SearchBox("searchBox", "search",false,'Search');
+  </script>
+  <div id="main-nav">
+    <ul class="sm sm-dox" id="main-menu">
+      <li>
+      <a href="index.html">
+      SpECTRE &#160;
+        <span id="projectnumber">v0.0.0</span>
+      </a>
+      </li>
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="selected">
+          <span id="selected">
+            <i class="octicon octicon-book"></i><span>Documentation</span>
+          </span>
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li style="min-width: 135px;">
+            <a href="index.html">
+            <i class="octicon octicon-book"></i><span>Introduction</span></a>
+          </li>
+          <li style="min-width: 135px;">
+            <a href="installation.html">
+              <i class="octicon octicon-desktop-download"></i><span>Installation</span>
+            </a>
+          </li>
+          <li style="min-width: 135px;">
+            <a href="tutorials.html">
+              <i class="octicon octicon-mortar-board"></i><span>User Tutorials</span>
+            </a>
+          </li>
+          <li style="min-width: 135px;">
+            <a href="dev_guide.html">
+              <i class="octicon octicon-gist-secret"></i><span>Dev Guide</span>
+            </a>
+          </li>
+          <li style="min-width: 135px;">
+            <a href="code_of_conduct.html">
+              <i class="octicon octicon-comment-discussion"></i><span>Code of Conduct</span>
+            </a>
+          </li>
+          <li style="min-width: 135px;">
+            <a href="contributing_to_spectre.html">
+              <i class="octicon octicon-git-pull-request"></i><span>Contributing Guide</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="selected">
+          <span id="selected">
+            <i class="octicon octicon-code"></i>
+              <span>Code Reference</span>
+          </span>
+          <span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li style="min-width: 130px;">
+            <a href="modules.html">
+              <i class="octicon octicon-code"></i>
+              <span>Topics</span>
+            </a>
+          </li>
+          <li style="min-width: 130px;">
+            <a href="namespaces.html">
+              <i class="octicon octicon-gist"></i>
+              <span>Namespaces</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="files.html">
+          <i class="octicon octicon-file-directory"></i><span>Files</span>
+        </a>
+      </li>
+      <li>
+        <a href="citelist.html">
+          <i class="octicon octicon-file-text"></i><span>Bibliography</span>
+        </a>
+      </li>
+      <li>
+        <a href="https://github.com/sxs-collaboration/spectre" target="_blank">
+          <i class="octicon octicon-mark-github"></i><span>View on GitHub</span>
+        </a>
+      </li>
+      <!--The Search <li> is added by doxygen later-->
+    </ul>
+  </div><!-- main-nav -->
+  </div><!-- titlearea -->
+  <!-- window showing the filter options -->
+  <div id="MSearchSelectWindow"  style="position: fixed;"
+       onmouseover="return searchBox.OnSearchSelectShow()"
+       onmouseout="return searchBox.OnSearchSelectHide()"
+       onkeydown="return searchBox.OnSearchSelectKey(event)">
+  </div>
+  <!-- iframe showing the search results (closed by default) -->
+  <div id="MSearchResultsWindow"  style="position: fixed;">
+  <iframe src="javascript:void(0)" frameborder="0"
+          name="MSearchResults" id="MSearchResults">
+  </iframe>
+  </div>
+<!-- Generated by Doxygen 1.8.13 -->
+<script type="text/javascript">
+var searchBox = new SearchBox("searchBox", "search",false,'Search');
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+</script>
+<div id="main-nav"></div>
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<iframe src="javascript:void(0)" frameborder="0" 
+        name="MSearchResults" id="MSearchResults">
+</iframe>
+</div>
+
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="namespaceNewtonianEuler.html">NewtonianEuler</a></li><li class="navelem"><a class="el" href="structNewtonianEuler_1_1System.html">System</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
+<a href="structNewtonianEuler_1_1System-members.html">List of all members</a>  </div>
+  <div class="headertitle">
+<div class="title">NewtonianEuler::System&lt; Dim, EquationOfStateType &gt; Struct Template Reference</div>  </div>
+</div><!--header-->
+<div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:abec52ce7967848cb41f9d9f67819b78c"><td class="memItemLeft" align="right" valign="top"><a id="abec52ce7967848cb41f9d9f67819b78c"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>primitive_variables_tag</b> = ::<a class="el" href="structTags_1_1Variables.html">Tags::Variables</a>&lt; tmpl::list&lt; <a class="el" href="structNewtonianEuler_1_1Tags_1_1MassDensity.html">Tags::MassDensity</a>&lt; <a class="el" href="classDataVector.html">DataVector</a> &gt;, <a class="el" href="structNewtonianEuler_1_1Tags_1_1Velocity.html">Tags::Velocity</a>&lt; <a class="el" href="classDataVector.html">DataVector</a>, Dim &gt;, <a class="el" href="structNewtonianEuler_1_1Tags_1_1SpecificInternalEnergy.html">Tags::SpecificInternalEnergy</a>&lt; <a class="el" href="classDataVector.html">DataVector</a> &gt;, <a class="el" href="structNewtonianEuler_1_1Tags_1_1Pressure.html">Tags::Pressure</a>&lt; <a class="el" href="classDataVector.html">DataVector</a> &gt; &gt;&gt;</td></tr>
+<tr class="separator:abec52ce7967848cb41f9d9f67819b78c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5656eff4902c102ba2f257e5fb96c850"><td class="memItemLeft" align="right" valign="top"><a id="a5656eff4902c102ba2f257e5fb96c850"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>variables_tag</b> = ::<a class="el" href="structTags_1_1Variables.html">Tags::Variables</a>&lt; tmpl::list&lt; <a class="el" href="structNewtonianEuler_1_1Tags_1_1MassDensityCons.html">Tags::MassDensityCons</a>&lt; <a class="el" href="classDataVector.html">DataVector</a> &gt;, <a class="el" href="structNewtonianEuler_1_1Tags_1_1MomentumDensity.html">Tags::MomentumDensity</a>&lt; <a class="el" href="classDataVector.html">DataVector</a>, Dim &gt;, <a class="el" href="structNewtonianEuler_1_1Tags_1_1EnergyDensity.html">Tags::EnergyDensity</a>&lt; <a class="el" href="classDataVector.html">DataVector</a> &gt; &gt;&gt;</td></tr>
+<tr class="separator:a5656eff4902c102ba2f257e5fb96c850"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d20ebcf405239fad0b8fb4fd9e3ef70"><td class="memTemplParams" colspan="2"><a id="a5d20ebcf405239fad0b8fb4fd9e3ef70"></a>
+template&lt;typename Tag &gt; </td></tr>
+<tr class="memitem:a5d20ebcf405239fad0b8fb4fd9e3ef70"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>magnitude_tag</b> = ::<a class="el" href="structTags_1_1EuclideanMagnitude.html">Tags::EuclideanMagnitude</a>&lt; Tag &gt;</td></tr>
+<tr class="separator:a5d20ebcf405239fad0b8fb4fd9e3ef70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd5f5ff62e73960e93921fbe85cfed08"><td class="memItemLeft" align="right" valign="top"><a id="afd5f5ff62e73960e93921fbe85cfed08"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>char_speeds_tag</b> = <a class="el" href="structNewtonianEuler_1_1Tags_1_1CharacteristicSpeedsCompute.html">Tags::CharacteristicSpeedsCompute</a>&lt; Dim &gt;</td></tr>
+<tr class="separator:afd5f5ff62e73960e93921fbe85cfed08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd0404950558c1199896c9134dee986a"><td class="memItemLeft" align="right" valign="top"><a id="acd0404950558c1199896c9134dee986a"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>compute_largest_characteristic_speed</b> = <a class="el" href="structNewtonianEuler_1_1ComputeLargestCharacteristicSpeed.html">ComputeLargestCharacteristicSpeed</a>&lt; Dim &gt;</td></tr>
+<tr class="separator:acd0404950558c1199896c9134dee986a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1988505ee921abd249bf07bc84e4fb7"><td class="memItemLeft" align="right" valign="top"><a id="af1988505ee921abd249bf07bc84e4fb7"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>conservative_from_primitive</b> = <a class="el" href="structNewtonianEuler_1_1ConservativeFromPrimitive.html">ConservativeFromPrimitive</a>&lt; Dim &gt;</td></tr>
+<tr class="separator:af1988505ee921abd249bf07bc84e4fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae857b0ff5afc461fb8f036e92497dcb6"><td class="memItemLeft" align="right" valign="top"><a id="ae857b0ff5afc461fb8f036e92497dcb6"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>primitive_from_conservative</b> = <a class="el" href="structNewtonianEuler_1_1PrimitiveFromConservative.html">PrimitiveFromConservative</a>&lt; Dim, thermodynamic_dim &gt;</td></tr>
+<tr class="separator:ae857b0ff5afc461fb8f036e92497dcb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4194ed0ce1d520714697b4e2d8184659"><td class="memItemLeft" align="right" valign="top"><a id="a4194ed0ce1d520714697b4e2d8184659"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>volume_fluxes</b> = <a class="el" href="structNewtonianEuler_1_1ComputeFluxes.html">ComputeFluxes</a>&lt; Dim &gt;</td></tr>
+<tr class="separator:a4194ed0ce1d520714697b4e2d8184659"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78a2bae20c44df689d7688943ba3529c"><td class="memItemLeft" align="right" valign="top"><a id="a78a2bae20c44df689d7688943ba3529c"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>compute_time_derivative</b> = <a class="el" href="structConservativeDuDt.html">ConservativeDuDt</a>&lt; <a class="el" href="structNewtonianEuler_1_1System.html">System</a> &gt;</td></tr>
+<tr class="separator:a78a2bae20c44df689d7688943ba3529c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e690225db98c80a6b4d38e654ee1ba2"><td class="memItemLeft" align="right" valign="top"><a id="a7e690225db98c80a6b4d38e654ee1ba2"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>sourced_variables</b> = tmpl::list&lt;&gt;</td></tr>
+<tr class="separator:a7e690225db98c80a6b4d38e654ee1ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a50793901c4f5c6d9ddb0553fee2d80a1"><td class="memItemLeft" align="right" valign="top"><a id="a50793901c4f5c6d9ddb0553fee2d80a1"></a>
+static constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_in_flux_conservative_form</b> = true</td></tr>
+<tr class="separator:a50793901c4f5c6d9ddb0553fee2d80a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc37e3508c8735d71d6e58204eca7e1a"><td class="memItemLeft" align="right" valign="top"><a id="abc37e3508c8735d71d6e58204eca7e1a"></a>
+static constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>has_primitive_and_conservative_vars</b> = true</td></tr>
+<tr class="separator:abc37e3508c8735d71d6e58204eca7e1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bd9a5613bd96f215c32734d3e70fc1f"><td class="memItemLeft" align="right" valign="top"><a id="a0bd9a5613bd96f215c32734d3e70fc1f"></a>
+static constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>volume_dim</b> = Dim</td></tr>
+<tr class="separator:a0bd9a5613bd96f215c32734d3e70fc1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f84b91c1eee450e127abf4cd1220c19"><td class="memItemLeft" align="right" valign="top">static constexpr size_t&#160;</td><td class="memItemRight" valign="bottom"><b>thermodynamic_dim</b></td></tr>
+<tr class="separator:a4f84b91c1eee450e127abf4cd1220c19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="a4f84b91c1eee450e127abf4cd1220c19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4f84b91c1eee450e127abf4cd1220c19">&#9670;&nbsp;</a></span>thermodynamic_dim</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;size_t Dim, typename EquationOfStateType &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr size_t <a class="el" href="structNewtonianEuler_1_1System.html">NewtonianEuler::System</a>&lt; Dim, EquationOfStateType &gt;::thermodynamic_dim</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div><div class="line">      EquationOfStateType::thermodynamic_dim</div></div><!-- fragment -->
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>src/Evolution/Systems/NewtonianEuler/<a class="el" href="NewtonianEuler_2System_8hpp_source.html">System.hpp</a></li>
+</ul>
+</div><!-- contents -->
+<!-- HTML footer for doxygen 1.8.10-->
+<!-- start footer part -->
+<hr class="footer"/><address class="footer"><small>
+&copy; Copyright 2017 - 2019
+<a href="https://black-holes.org">SXS Collaboration</a>,
+<a href="LICENSE.txt" target="_blank">
+<span class="hidden-xs">Distributed under the</span>
+MIT License</a>
+</small></address>
+</body>
+</html>

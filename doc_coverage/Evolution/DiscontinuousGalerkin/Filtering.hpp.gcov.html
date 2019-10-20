@@ -1,0 +1,380 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - b1f4fe8326c5dc9de3d64954e9325e08a2677cfd - Evolution/DiscontinuousGalerkin/Filtering.hpp</title>
+  <link rel="stylesheet" type="text/css" href="../../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title"> SpECTRE Documentation Coverage Report</td></tr>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../../index.html">top level</a> - <a href="index.html">Evolution/DiscontinuousGalerkin</a> - Filtering.hpp</td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+             <td class="headerItem">Commit:</td>
+             <td class="headerValue"><a target="_blank" href="https://github.com/sxs-collaboration/spectre/commit/b1f4fe8326c5dc9de3d64954e9325e08a2677cfd">b1f4fe8326c5dc9de3d64954e9325e08a2677cfd</a></td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">35</td>
+            <td class="headerCovTableEntryLo">14.3 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2019-10-20 17:39:50</td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="headerItem">Legend:</td>
+            <td class="headerValueLeg">            Lines:
+            <span class="coverLegendCov">hit</span>
+            <span class="coverLegendNoCov">not hit</span>
+</td>
+            <td></td>
+          </tr>
+          <tr><td><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<span class="lineNum">       1 </span><span class="lineNoCov">          0 : // Distributed under the MIT License.</span>
+<span class="lineNum">       2 </span>            : // See LICENSE.txt for details.
+<span class="lineNum">       3 </span>            : 
+<span class="lineNum">       4 </span>            : #pragma once
+<span class="lineNum">       5 </span>            : 
+<span class="lineNum">       6 </span>            : #include &lt;array&gt;
+<span class="lineNum">       7 </span>            : #include &lt;cstddef&gt;
+<span class="lineNum">       8 </span>            : #include &lt;string&gt;
+<span class="lineNum">       9 </span>            : #include &lt;tuple&gt;
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &quot;DataStructures/DataBox/DataBox.hpp&quot;
+<span class="lineNum">      12 </span>            : #include &quot;DataStructures/DataVector.hpp&quot;
+<span class="lineNum">      13 </span>            : #include &quot;DataStructures/Matrix.hpp&quot;
+<span class="lineNum">      14 </span>            : #include &quot;Domain/Mesh.hpp&quot;
+<span class="lineNum">      15 </span>            : #include &quot;Domain/Tags.hpp&quot;
+<span class="lineNum">      16 </span>            : #include &quot;ErrorHandling/Error.hpp&quot;
+<span class="lineNum">      17 </span>            : #include &quot;NumericalAlgorithms/LinearOperators/ApplyMatrices.hpp&quot;
+<span class="lineNum">      18 </span>            : #include &quot;NumericalAlgorithms/Spectral/Filtering.hpp&quot;
+<span class="lineNum">      19 </span>            : #include &quot;NumericalAlgorithms/Spectral/Spectral.hpp&quot;
+<span class="lineNum">      20 </span>            : #include &quot;Options/Options.hpp&quot;
+<span class="lineNum">      21 </span>            : #include &quot;Parallel/ConstGlobalCache.hpp&quot;
+<span class="lineNum">      22 </span>            : #include &quot;Utilities/Gsl.hpp&quot;
+<span class="lineNum">      23 </span>            : #include &quot;Utilities/StaticCache.hpp&quot;
+<span class="lineNum">      24 </span>            : #include &quot;Utilities/StdHelpers.hpp&quot;
+<span class="lineNum">      25 </span>            : #include &quot;Utilities/TMPL.hpp&quot;
+<span class="lineNum">      26 </span>            : #include &quot;Utilities/TypeTraits.hpp&quot;
+<span class="lineNum">      27 </span>            : 
+<span class="lineNum">      28 </span>            : namespace OptionTags {
+<span class="lineNum">      29 </span>            : /*!
+<span class="lineNum">      30 </span>            :  * \ingroup OptionGroupsGroup
+<span class="lineNum">      31 </span>            :  * \brief Groups the filtering configurations in the input file.
+<span class="lineNum">      32 </span>            :  */
+<span class="lineNum">      33 </span><span class="lineCov">          1 : struct FilteringGroup {</span>
+<span class="lineNum">      34 </span><span class="lineNoCov">          0 :   static std::string name() noexcept { return &quot;Filtering&quot;; }</span>
+<span class="lineNum">      35 </span><span class="lineNoCov">          0 :   static constexpr OptionString help = &quot;Options for filtering&quot;;</span>
+<span class="lineNum">      36 </span>            : };
+<span class="lineNum">      37 </span>            : }  // namespace OptionTags
+<span class="lineNum">      38 </span>            : 
+<span class="lineNum">      39 </span><span class="lineNoCov">          0 : namespace dg {</span>
+<span class="lineNum">      40 </span><span class="lineNoCov">          0 : namespace Actions {</span>
+<span class="lineNum">      41 </span>            : namespace ExponentialFilter_detail {
+<span class="lineNum">      42 </span>            : template &lt;bool SameSize, bool SameList&gt;
+<span class="lineNum">      43 </span>            : struct FilterAllEvolvedVars {
+<span class="lineNum">      44 </span>            :   template &lt;typename EvolvedVarsTagList, typename... FilterTags&gt;
+<span class="lineNum">      45 </span>            :   using f = std::integral_constant&lt;bool, false&gt;;
+<span class="lineNum">      46 </span>            : };
+<span class="lineNum">      47 </span>            : 
+<span class="lineNum">      48 </span>            : template &lt;&gt;
+<span class="lineNum">      49 </span>            : struct FilterAllEvolvedVars&lt;true, false&gt; {
+<span class="lineNum">      50 </span>            :   template &lt;typename EvolvedVarsTagList, typename... FilterTags&gt;
+<span class="lineNum">      51 </span>            :   using f =
+<span class="lineNum">      52 </span>            :       std::integral_constant&lt;bool, tmpl2::flat_all_v&lt;tmpl::list_contains_v&lt;
+<span class="lineNum">      53 </span>            :                                        EvolvedVarsTagList, FilterTags&gt;...&gt;&gt;;
+<span class="lineNum">      54 </span>            : };
+<span class="lineNum">      55 </span>            : 
+<span class="lineNum">      56 </span>            : template &lt;&gt;
+<span class="lineNum">      57 </span>            : struct FilterAllEvolvedVars&lt;true, true&gt; {
+<span class="lineNum">      58 </span>            :   template &lt;typename EvolvedVarsTagList, typename... FilterTags&gt;
+<span class="lineNum">      59 </span>            :   using f = std::integral_constant&lt;bool, true&gt;;
+<span class="lineNum">      60 </span>            : };
+<span class="lineNum">      61 </span>            : }  // namespace ExponentialFilter_detail
+<span class="lineNum">      62 </span>            : 
+<span class="lineNum">      63 </span>            : /// \cond
+<span class="lineNum">      64 </span>            : template &lt;size_t FilterIndex, typename TagsToFilterList&gt;
+<span class="lineNum">      65 </span>            : struct ExponentialFilter;
+<span class="lineNum">      66 </span>            : /// \endcond
+<span class="lineNum">      67 </span>            : 
+<span class="lineNum">      68 </span>            : /*!
+<span class="lineNum">      69 </span>            :  * \ingroup DiscontinuousGalerkinGroup
+<span class="lineNum">      70 </span>            :  * \brief Applies an exponential filter to the specified tags.
+<span class="lineNum">      71 </span>            :  *
+<span class="lineNum">      72 </span>            :  * Applies an exponential filter in each logical direction to each component of
+<span class="lineNum">      73 </span>            :  * the tensors `TagsToFilter`. The exponential filter rescales the 1d modal
+<span class="lineNum">      74 </span>            :  * coefficients \f$c_i\f$ as:
+<span class="lineNum">      75 </span>            :  *
+<span class="lineNum">      76 </span>            :  * \f{align*}{
+<span class="lineNum">      77 </span>            :  *  c_i\to c_i \exp\left[-\alpha_{\mathrm{ef}}
+<span class="lineNum">      78 </span>            :  *   \left(\frac{i}{N}\right)^{2\beta_{\mathrm{ef}}}\right]
+<span class="lineNum">      79 </span>            :  * \f}
+<span class="lineNum">      80 </span>            :  *
+<span class="lineNum">      81 </span>            :  * where \f$N\f$ is the basis order, \f$\alpha_{\mathrm{ef}}\f$ determines how
+<span class="lineNum">      82 </span>            :  * much the coefficients are rescaled, and \f$\beta_{\mathrm{ef}}\f$ (given by
+<span class="lineNum">      83 </span>            :  * the `HalfPower` option) determines how aggressive/broad the filter is (lower
+<span class="lineNum">      84 </span>            :  * values means filtering more coefficients). Setting
+<span class="lineNum">      85 </span>            :  * \f$\alpha_{\mathrm{ef}}=36\f$ results in effectively zeroing the highest
+<span class="lineNum">      86 </span>            :  * coefficient (in practice it gets rescaled by machine epsilon). The same
+<span class="lineNum">      87 </span>            :  * \f$\alpha_{\mathrm{ef}}\f$ and \f$\beta_{\mathrm{ef}}\f$ are used in each
+<span class="lineNum">      88 </span>            :  * logical direction. For a discussion of filtering see section 5.3 of
+<span class="lineNum">      89 </span>            :  * \cite HesthavenWarburton.
+<span class="lineNum">      90 </span>            :  *
+<span class="lineNum">      91 </span>            :  * If different `Alpha` or `HalfPower` parameters are desired for different tags
+<span class="lineNum">      92 </span>            :  * then multiple `ExponentialFilter` actions must be inserted into the action
+<span class="lineNum">      93 </span>            :  * list with different `FilterIndex` values. In the input file these will be
+<span class="lineNum">      94 </span>            :  * specified as `ExpFilterFILTER_INDEX`, e.g. `ExpFilter0` and `ExpFilter1`.
+<span class="lineNum">      95 </span>            :  * Below is an example of an action list with two different exponential filters:
+<span class="lineNum">      96 </span>            :  *
+<span class="lineNum">      97 </span>            :  * \snippet DiscontinuousGalerkin/Test_Filtering.cpp action_list_example
+<span class="lineNum">      98 </span>            :  *
+<span class="lineNum">      99 </span>            :  * #### Action properties
+<span class="lineNum">     100 </span>            :  *
+<span class="lineNum">     101 </span>            :  * Uses:
+<span class="lineNum">     102 </span>            :  * - ConstGlobalCache:
+<span class="lineNum">     103 </span>            :  *   - `ExponentialFilter`
+<span class="lineNum">     104 </span>            :  * - DataBox:
+<span class="lineNum">     105 </span>            :  *   - `Tags::Mesh`
+<span class="lineNum">     106 </span>            :  * - DataBox changes:
+<span class="lineNum">     107 </span>            :  *   - Adds: nothing
+<span class="lineNum">     108 </span>            :  *   - Removes: nothing
+<span class="lineNum">     109 </span>            :  *   - Modifies:
+<span class="lineNum">     110 </span>            :  *     - `TagsToFilter`
+<span class="lineNum">     111 </span>            :  * - System:
+<span class="lineNum">     112 </span>            :  *   - `volume_dim`
+<span class="lineNum">     113 </span>            :  *   - `variables_tag`
+<span class="lineNum">     114 </span>            :  *
+<span class="lineNum">     115 </span>            :  * #### Design decision:
+<span class="lineNum">     116 </span>            :  *
+<span class="lineNum">     117 </span>            :  * - The reason for the `size_t` template parameter is to allow for different
+<span class="lineNum">     118 </span>            :  * `Alpha` and `HalfPower` parameters for different tensors while still being
+<span class="lineNum">     119 </span>            :  * able to cache the matrices.
+<span class="lineNum">     120 </span>            :  */
+<span class="lineNum">     121 </span>            : template &lt;size_t FilterIndex, typename... TagsToFilter&gt;
+<span class="lineNum">     122 </span><span class="lineCov">          1 : class ExponentialFilter&lt;FilterIndex, tmpl::list&lt;TagsToFilter...&gt;&gt; {</span>
+<span class="lineNum">     123 </span>            :  public:
+<span class="lineNum">     124 </span><span class="lineNoCov">          0 :   using const_global_cache_tags = tmpl::list&lt;ExponentialFilter&gt;;</span>
+<span class="lineNum">     125 </span>            : 
+<span class="lineNum">     126 </span>            :   /// \brief The value of `exp(-alpha)` is what the highest modal coefficient is
+<span class="lineNum">     127 </span>            :   /// rescaled by.
+<span class="lineNum">     128 </span><span class="lineCov">          1 :   struct Alpha {</span>
+<span class="lineNum">     129 </span><span class="lineNoCov">          0 :     using type = double;</span>
+<span class="lineNum">     130 </span><span class="lineNoCov">          0 :     static constexpr OptionString help =</span>
+<span class="lineNum">     131 </span>            :         &quot;exp(-alpha) is rescaling of highest coefficient&quot;;
+<span class="lineNum">     132 </span><span class="lineNoCov">          0 :     static type lower_bound() noexcept { return 0.0; }</span>
+<span class="lineNum">     133 </span>            :   };
+<span class="lineNum">     134 </span>            :   /*!
+<span class="lineNum">     135 </span>            :    * \brief Half of the exponent in the exponential.
+<span class="lineNum">     136 </span>            :    *
+<span class="lineNum">     137 </span>            :    * \f{align*}{
+<span class="lineNum">     138 </span>            :    *  c_i\to c_i \exp\left[-\alpha \left(\frac{i}{N}\right)^{2m}\right]
+<span class="lineNum">     139 </span>            :    * \f}
+<span class="lineNum">     140 </span>            :    */
+<span class="lineNum">     141 </span><span class="lineCov">          1 :   struct HalfPower {</span>
+<span class="lineNum">     142 </span><span class="lineNoCov">          0 :     using type = unsigned;</span>
+<span class="lineNum">     143 </span><span class="lineNoCov">          0 :     static constexpr OptionString help =</span>
+<span class="lineNum">     144 </span>            :         &quot;Half of the exponent in the generalized Gaussian&quot;;
+<span class="lineNum">     145 </span><span class="lineNoCov">          0 :     static type lower_bound() noexcept { return 1; }</span>
+<span class="lineNum">     146 </span>            :   };
+<span class="lineNum">     147 </span>            :   /// \brief Turn the filter off
+<span class="lineNum">     148 </span>            :   ///
+<span class="lineNum">     149 </span>            :   /// This option exists to temporarily disable the filter for debugging
+<span class="lineNum">     150 </span>            :   /// purposes. For problems where filtering is not needed, the preferred
+<span class="lineNum">     151 </span>            :   /// approach is to not compile the filter into the executable.
+<span class="lineNum">     152 </span><span class="lineCov">          1 :   struct DisableForDebugging {</span>
+<span class="lineNum">     153 </span><span class="lineNoCov">          0 :     using type = bool;</span>
+<span class="lineNum">     154 </span><span class="lineNoCov">          0 :     static type default_value() noexcept { return false; }</span>
+<span class="lineNum">     155 </span><span class="lineNoCov">          0 :     static constexpr OptionString help = {&quot;Disable the filter&quot;};</span>
+<span class="lineNum">     156 </span>            :   };
+<span class="lineNum">     157 </span>            : 
+<span class="lineNum">     158 </span><span class="lineNoCov">          0 :   using type = ExponentialFilter;</span>
+<span class="lineNum">     159 </span><span class="lineNoCov">          0 :   static std::string name() noexcept {</span>
+<span class="lineNum">     160 </span>            :     return &quot;ExpFilter&quot; + std::to_string(FilterIndex);
+<span class="lineNum">     161 </span>            :   }
+<span class="lineNum">     162 </span><span class="lineNoCov">          0 :   using group = ::OptionTags::FilteringGroup;</span>
+<span class="lineNum">     163 </span>            : 
+<span class="lineNum">     164 </span><span class="lineNoCov">          0 :   using options = tmpl::list&lt;Alpha, HalfPower, DisableForDebugging&gt;;</span>
+<span class="lineNum">     165 </span><span class="lineNoCov">          0 :   static constexpr OptionString help = {&quot;An exponential filter.&quot;};</span>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span><span class="lineNoCov">          0 :   ExponentialFilter() = default;</span>
+<span class="lineNum">     168 </span>            : 
+<span class="lineNum">     169 </span><span class="lineNoCov">          0 :   ExponentialFilter(double alpha, unsigned half_power,</span>
+<span class="lineNum">     170 </span>            :                     bool disable_for_debugging) noexcept;
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            :   // Action part of the class
+<span class="lineNum">     173 </span>            :   template &lt;typename DbTags, typename... InboxTags, typename ArrayIndex,
+<span class="lineNum">     174 </span>            :             typename ActionList, typename ParallelComponent,
+<span class="lineNum">     175 </span>            :             typename Metavariables&gt;
+<span class="lineNum">     176 </span><span class="lineNoCov">          0 :   static std::tuple&lt;db::DataBox&lt;DbTags&gt;&amp;&amp;&gt; apply(</span>
+<span class="lineNum">     177 </span>            :       db::DataBox&lt;DbTags&gt;&amp; box,
+<span class="lineNum">     178 </span>            :       const tuples::TaggedTuple&lt;InboxTags...&gt;&amp; /*inboxes*/,
+<span class="lineNum">     179 </span>            :       const Parallel::ConstGlobalCache&lt;Metavariables&gt;&amp; cache,
+<span class="lineNum">     180 </span>            :       const ArrayIndex&amp; /*array_index*/, const ActionList /*meta*/,
+<span class="lineNum">     181 </span>            :       const ParallelComponent* const /*meta*/) noexcept {
+<span class="lineNum">     182 </span>            :     constexpr size_t volume_dim = Metavariables::system::volume_dim;
+<span class="lineNum">     183 </span>            :     using evolved_vars_tag = typename Metavariables::system::variables_tag;
+<span class="lineNum">     184 </span>            :     using evolved_vars_tags_list = typename evolved_vars_tag::tags_list;
+<span class="lineNum">     185 </span>            :     const ExponentialFilter&amp; filter_helper =
+<span class="lineNum">     186 </span>            :         Parallel::get&lt;ExponentialFilter&gt;(cache);
+<span class="lineNum">     187 </span>            :     if (UNLIKELY(filter_helper.disable_for_debugging_)) {
+<span class="lineNum">     188 </span>            :       return {std::move(box)};
+<span class="lineNum">     189 </span>            :     }
+<span class="lineNum">     190 </span>            :     const Mesh&lt;volume_dim&gt; mesh = db::get&lt;::Tags::Mesh&lt;volume_dim&gt;&gt;(box);
+<span class="lineNum">     191 </span>            :     const Matrix empty{};
+<span class="lineNum">     192 </span>            :     auto filter = make_array&lt;volume_dim&gt;(std::cref(empty));
+<span class="lineNum">     193 </span>            :     for (size_t d = 0; d &lt; volume_dim; d++) {
+<span class="lineNum">     194 </span>            :       gsl::at(filter, d) =
+<span class="lineNum">     195 </span>            :           std::cref(filter_helper.filter_matrix(mesh.slice_through(d)));
+<span class="lineNum">     196 </span>            :     }
+<span class="lineNum">     197 </span>            : 
+<span class="lineNum">     198 </span>            :     // In the case that the tags we are filtering are all the evolved variables
+<span class="lineNum">     199 </span>            :     // we filter the entire Variables at once to be more efficient. This case is
+<span class="lineNum">     200 </span>            :     // the first branch of the `if-else`.
+<span class="lineNum">     201 </span>            :     if (ExponentialFilter_detail::FilterAllEvolvedVars&lt;
+<span class="lineNum">     202 </span>            :             sizeof...(TagsToFilter) ==
+<span class="lineNum">     203 </span>            :                 tmpl::size&lt;evolved_vars_tags_list&gt;::value,
+<span class="lineNum">     204 </span>            :             cpp17::is_same_v&lt;evolved_vars_tags_list,
+<span class="lineNum">     205 </span>            :                              tmpl::list&lt;TagsToFilter...&gt;&gt;&gt;::
+<span class="lineNum">     206 </span>            :             template f&lt;evolved_vars_tags_list, TagsToFilter...&gt;::value) {
+<span class="lineNum">     207 </span>            :       db::mutate&lt;typename Metavariables::system::variables_tag&gt;(
+<span class="lineNum">     208 </span>            :           make_not_null(&amp;box),
+<span class="lineNum">     209 </span>            :           [&amp;filter](
+<span class="lineNum">     210 </span>            :               const gsl::not_null&lt;
+<span class="lineNum">     211 </span>            :                   db::item_type&lt;typename Metavariables::system::variables_tag&gt;*&gt;
+<span class="lineNum">     212 </span>            :                   vars,
+<span class="lineNum">     213 </span>            :               const auto&amp; local_mesh) noexcept {
+<span class="lineNum">     214 </span>            :             *vars = apply_matrices(filter, *vars, local_mesh.extents());
+<span class="lineNum">     215 </span>            :           },
+<span class="lineNum">     216 </span>            :           mesh);
+<span class="lineNum">     217 </span>            :     } else {
+<span class="lineNum">     218 </span>            :       db::mutate&lt;TagsToFilter...&gt;(
+<span class="lineNum">     219 </span>            :           make_not_null(&amp;box),
+<span class="lineNum">     220 </span>            :           [&amp;filter](const gsl::not_null&lt;
+<span class="lineNum">     221 </span>            :                         db::item_type&lt;TagsToFilter&gt;*&gt;... tensors_to_filter,
+<span class="lineNum">     222 </span>            :                     const auto&amp; local_mesh) noexcept {
+<span class="lineNum">     223 </span>            :             DataVector temp(local_mesh.number_of_grid_points(), 0.0);
+<span class="lineNum">     224 </span>            :             const auto helper =
+<span class="lineNum">     225 </span>            :                 [&amp;local_mesh, &amp;filter, &amp;temp ](const auto tensor) noexcept {
+<span class="lineNum">     226 </span>            :               for (auto&amp; component : *tensor) {
+<span class="lineNum">     227 </span>            :                 temp = 0.0;
+<span class="lineNum">     228 </span>            :                 apply_matrices(make_not_null(&amp;temp), filter, component,
+<span class="lineNum">     229 </span>            :                                local_mesh.extents());
+<span class="lineNum">     230 </span>            :                 component = temp;
+<span class="lineNum">     231 </span>            :               }
+<span class="lineNum">     232 </span>            :             };
+<span class="lineNum">     233 </span>            :             EXPAND_PACK_LEFT_TO_RIGHT(helper(tensors_to_filter));
+<span class="lineNum">     234 </span>            :           },
+<span class="lineNum">     235 </span>            :           mesh);
+<span class="lineNum">     236 </span>            :     }
+<span class="lineNum">     237 </span>            :     return {std::move(box)};
+<span class="lineNum">     238 </span>            :   }
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            :   // NOLINTNEXTLINE(google-runtime-references)
+<span class="lineNum">     241 </span><span class="lineNoCov">          0 :   void pup(PUP::er&amp; p) noexcept;</span>
+<span class="lineNum">     242 </span>            : 
+<span class="lineNum">     243 </span><span class="lineNoCov">          0 :   bool operator==(const ExponentialFilter&amp; rhs) const noexcept;</span>
+<span class="lineNum">     244 </span>            : 
+<span class="lineNum">     245 </span>            :  private:
+<span class="lineNum">     246 </span><span class="lineNoCov">          0 :   const Matrix&amp; filter_matrix(const Mesh&lt;1&gt;&amp; mesh) const noexcept {</span>
+<span class="lineNum">     247 </span>            :     const auto cache_function = [this](
+<span class="lineNum">     248 </span>            :         const size_t extents, const Spectral::Basis basis,
+<span class="lineNum">     249 </span>            :         const Spectral::Quadrature quadrature) noexcept {
+<span class="lineNum">     250 </span>            :       return Spectral::filtering::exponential_filter(
+<span class="lineNum">     251 </span>            :           Mesh&lt;1&gt;{extents, basis, quadrature}, alpha_, half_power_);
+<span class="lineNum">     252 </span>            :     };
+<span class="lineNum">     253 </span>            : 
+<span class="lineNum">     254 </span>            :     const static auto cache = make_static_cache&lt;
+<span class="lineNum">     255 </span>            :         CacheRange&lt;
+<span class="lineNum">     256 </span>            :             1,
+<span class="lineNum">     257 </span>            :             Spectral::maximum_number_of_points&lt;Spectral::Basis::Legendre&gt; + 1&gt;,
+<span class="lineNum">     258 </span>            :         CacheEnumeration&lt;Spectral::Basis, Spectral::Basis::Legendre,
+<span class="lineNum">     259 </span>            :                          Spectral::Basis::Chebyshev&gt;,
+<span class="lineNum">     260 </span>            :         CacheEnumeration&lt;Spectral::Quadrature, Spectral::Quadrature::Gauss,
+<span class="lineNum">     261 </span>            :                          Spectral::Quadrature::GaussLobatto&gt;&gt;(cache_function);
+<span class="lineNum">     262 </span>            :     return cache(mesh.extents(0), mesh.basis(0), mesh.quadrature(0));
+<span class="lineNum">     263 </span>            :   }
+<span class="lineNum">     264 </span>            : 
+<span class="lineNum">     265 </span><span class="lineNoCov">          0 :   double alpha_{36.0};</span>
+<span class="lineNum">     266 </span><span class="lineNoCov">          0 :   unsigned half_power_{16};</span>
+<span class="lineNum">     267 </span><span class="lineNoCov">          0 :   bool disable_for_debugging_{false};</span>
+<span class="lineNum">     268 </span>            : };
+<span class="lineNum">     269 </span>            : 
+<span class="lineNum">     270 </span>            : template &lt;size_t FilterIndex, typename... TagsToFilter&gt;
+<span class="lineNum">     271 </span>            : ExponentialFilter&lt;FilterIndex, tmpl::list&lt;TagsToFilter...&gt;&gt;::ExponentialFilter(
+<span class="lineNum">     272 </span>            :     const double alpha, const unsigned half_power,
+<span class="lineNum">     273 </span>            :     const bool disable_for_debugging) noexcept
+<span class="lineNum">     274 </span>            :     : alpha_(alpha),
+<span class="lineNum">     275 </span>            :       half_power_(half_power),
+<span class="lineNum">     276 </span>            :       disable_for_debugging_(disable_for_debugging) {}
+<span class="lineNum">     277 </span>            : 
+<span class="lineNum">     278 </span>            : template &lt;size_t FilterIndex, typename... TagsToFilter&gt;
+<span class="lineNum">     279 </span>            : void ExponentialFilter&lt;FilterIndex, tmpl::list&lt;TagsToFilter...&gt;&gt;::pup(
+<span class="lineNum">     280 </span>            :     PUP::er&amp; p) noexcept {
+<span class="lineNum">     281 </span>            :   p | alpha_;
+<span class="lineNum">     282 </span>            :   p | half_power_;
+<span class="lineNum">     283 </span>            :   p | disable_for_debugging_;
+<span class="lineNum">     284 </span>            : }
+<span class="lineNum">     285 </span>            : 
+<span class="lineNum">     286 </span>            : template &lt;size_t FilterIndex, typename... TagsToFilter&gt;
+<span class="lineNum">     287 </span>            : bool ExponentialFilter&lt;FilterIndex, tmpl::list&lt;TagsToFilter...&gt;&gt;::operator==(
+<span class="lineNum">     288 </span>            :     const ExponentialFilter&amp; rhs) const noexcept {
+<span class="lineNum">     289 </span>            :   return alpha_ == rhs.alpha_ and half_power_ == rhs.half_power_ and
+<span class="lineNum">     290 </span>            :          disable_for_debugging_ == rhs.disable_for_debugging_;
+<span class="lineNum">     291 </span>            : }
+<span class="lineNum">     292 </span>            : 
+<span class="lineNum">     293 </span>            : template &lt;size_t FilterIndex, typename TagsToFilterList&gt;
+<span class="lineNum">     294 </span><span class="lineNoCov">          0 : bool operator!=(</span>
+<span class="lineNum">     295 </span>            :     const ExponentialFilter&lt;FilterIndex, TagsToFilterList&gt;&amp; lhs,
+<span class="lineNum">     296 </span>            :     const ExponentialFilter&lt;FilterIndex, TagsToFilterList&gt;&amp; rhs) noexcept {
+<span class="lineNum">     297 </span>            :   return not(lhs == rhs);
+<span class="lineNum">     298 </span>            : }
+<span class="lineNum">     299 </span>            : }  // namespace Actions
+<span class="lineNum">     300 </span>            : }  // namespace dg
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
