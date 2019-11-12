@@ -29,7 +29,7 @@ Observers:
 
 LinearSolver:
   ConvergenceCriteria:
-    MaxIterations: 1
-    AbsoluteResidual: 0
-    RelativeResidual: 0
+    MaxIterations: 100
+    AbsoluteResidual: 1e-15
+    RelativeResidual: 1e-8
   Verbosity: Verbose
