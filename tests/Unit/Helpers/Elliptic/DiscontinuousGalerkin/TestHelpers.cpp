@@ -72,12 +72,14 @@ DgElementArray<Dim> create_elements(
           element_id, block.stationary_map().get_clone()};
       const auto logical_coords = logical_coordinates(mesh);
       auto inv_jacobian = element_map.inv_jacobian(logical_coords);
+      auto jacobian = element_map.jacobian(logical_coords);
       elements.emplace(
           element_id,
           DgElement<Dim>{mesh,
                          domain::Initialization::create_initial_element(
                              element_id, block, refinement_levels),
-                         std::move(element_map), std::move(inv_jacobian)});
+                         std::move(element_map), std::move(inv_jacobian),
+                         std::move(jacobian)});
     }
   }
   return elements;

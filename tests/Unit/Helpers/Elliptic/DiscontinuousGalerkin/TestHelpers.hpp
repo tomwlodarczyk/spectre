@@ -58,6 +58,7 @@ struct DgElement {
   ElementMap<Dim, Frame::Inertial> element_map;
   InverseJacobian<DataVector, Dim, Frame::Logical, Frame::Inertial>
       inv_jacobian;
+  Jacobian<DataVector, Dim, Frame::Logical, Frame::Inertial> jacobian;
 };
 
 /// Defines an ordering of elements by block ID first, then by segment
@@ -180,7 +181,7 @@ apply_first_order_dg_operator(
   ResultVars result{num_points};
 
   // Compute fluxes
-  const auto fluxes = cpp17::apply(
+  const auto fluxes = std::apply(
       [&vars, &fluxes_computer](const auto&... fluxes_args) {
         return ::elliptic::first_order_fluxes<volume_dim, PrimalFields,
                                               AuxiliaryFields>(
@@ -200,7 +201,7 @@ apply_first_order_dg_operator(
   }
 
   // Compute sources
-  const auto sources = cpp17::apply(
+  const auto sources = std::apply(
       [&vars](const auto&... sources_args) {
         return ::elliptic::first_order_sources<PrimalFields, AuxiliaryFields,
                                                SourcesComputer>(
@@ -238,10 +239,10 @@ apply_first_order_dg_operator(
     // from the `system` but then we need to handle its arguments. Or we could
     // pass a magnitude function (pointer) into `apply_dg_operator`, but then
     // we should check it's consistent with the system.
-    static_assert(cpp17::is_same_v<
-                      typename System::template magnitude_tag<detail::TestTag>,
-                      ::Tags::EuclideanMagnitude<detail::TestTag>>,
-                  "Only Euclidean magnitudes are currently supported.");
+    static_assert(
+        std::is_same_v<typename System::template magnitude_tag<detail::TestTag>,
+                       ::Tags::EuclideanMagnitude<detail::TestTag>>,
+        "Only Euclidean magnitudes are currently supported.");
     const auto magnitude_of_face_normal = magnitude(face_normal);
     for (size_t d = 0; d < volume_dim; d++) {
       face_normal.get(d) /= get(magnitude_of_face_normal);
@@ -275,7 +276,7 @@ apply_first_order_dg_operator(
       Vars ghost_vars{face_num_points};
       ::elliptic::dg::homogeneous_dirichlet_boundary_conditions<PrimalFields>(
           make_not_null(&ghost_vars), vars_on_face);
-      const auto ghost_fluxes = cpp17::apply(
+      const auto ghost_fluxes = std::apply(
           [&ghost_vars, &fluxes_computer](const auto&... fluxes_args) {
             return ::elliptic::first_order_fluxes<volume_dim, PrimalFields,
                                                   AuxiliaryFields>(
@@ -310,7 +311,7 @@ apply_first_order_dg_operator(
       ASSERT(neighbor_mortar_mesh == mortar_mesh,
              "Mismatch between neighboring mortar meshes");
       const auto& remote_vars = all_variables.at(neighbor_id);
-      const auto remote_fluxes = cpp17::apply(
+      const auto remote_fluxes = std::apply(
           [&remote_vars, &fluxes_computer](const auto&... fluxes_args) {
             return ::elliptic::first_order_fluxes<volume_dim, PrimalFields,
                                                   AuxiliaryFields>(
@@ -509,7 +510,7 @@ auto apply_dg_operator_to_solution(
   // Dump to file if requested
   if (dump_to_file) {
     detail::dump_volume_data_to_file(elements, std::move(*volume_data_dump),
-                             *dump_to_file);
+                                     *dump_to_file);
   }
   return operator_applied_to_solution_vars;
 }
