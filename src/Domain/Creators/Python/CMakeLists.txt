@@ -11,6 +11,7 @@ spectre_python_add_module(
   Bindings.cpp
   Brick.cpp
   Cylinder.cpp
+  CylindricalMirror.cpp
   DomainCreator.cpp
   Interval.cpp
   Rectangle.cpp

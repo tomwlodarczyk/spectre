@@ -1,0 +1,294 @@
+// Distributed under the MIT License.
+// See LICENSE.txt for details.
+
+#include "Domain/Creators/CylindricalMirror.hpp"
+
+#include <cmath>
+
+#include "Domain/CoordinateMaps/Affine.hpp"
+#include "Domain/CoordinateMaps/CoordinateMap.hpp"
+#include "Domain/CoordinateMaps/CoordinateMap.tpp"
+#include "Domain/CoordinateMaps/Equiangular.hpp"
+#include "Domain/CoordinateMaps/ProductMaps.hpp"
+#include "Domain/CoordinateMaps/ProductMaps.tpp"
+#include "Domain/CoordinateMaps/Wedge2D.hpp"
+#include "Domain/Creators/DomainCreator.hpp"  // IWYU pragma: keep
+#include "Domain/Direction.hpp"
+#include "Domain/Domain.hpp"
+#include "Domain/DomainHelpers.hpp"
+#include "Domain/OrientationMap.hpp"
+#include "ErrorHandling/Assert.hpp"
+#include "Utilities/MakeArray.hpp"
+
+namespace Frame {
+struct Logical;
+struct Inertial;
+}  // namespace Frame
+
+namespace domain {
+namespace creators {
+
+std::vector<std::array<size_t, 8>> list_corners(
+    std::vector<double> partition_along_r,
+    std::vector<double> partition_along_z) {
+  std::vector<std::array<size_t, 8>> corners;
+  size_t n_l =
+      4 * (partition_along_r.size());  // number of corners in each layer
+  for (size_t i = 0; i < partition_along_z.size() - 1; i++) {
+    std::array<size_t, 8> square_corners{
+        {i * n_l + 0, i * n_l + 1, i * n_l + 2, i * n_l + 3, (i + 1) * n_l + 0,
+         (i + 1) * n_l + 1, (i + 1) * n_l + 2, (i + 1) * n_l + 3}};
+    corners.push_back(square_corners);
+    for (size_t j = 0; j < partition_along_r.size() - 1; j++) {
+      std::array<size_t, 8> wedge_south{
+          {i * n_l + j * 4 + 0, i * n_l + (j + 1) * 4 + 0, i * n_l + j * 4 + 1,
+           i * n_l + (j + 1) * 4 + 1, (i + 1) * n_l + j * 4 + 0,
+           (i + 1) * n_l + (j + 1) * 4 + 0, (i + 1) * n_l + j * 4 + 1,
+           (i + 1) * n_l + (j + 1) * 4 + 1}};
+      std::array<size_t, 8> wedge_east{
+          {i * n_l + j * 4 + 1, i * n_l + (j + 1) * 4 + 1, i * n_l + j * 4 + 3,
+           i * n_l + (j + 1) * 4 + 3, (i + 1) * n_l + j * 4 + 1,
+           (i + 1) * n_l + (j + 1) * 4 + 1, (i + 1) * n_l + j * 4 + 3,
+           (i + 1) * n_l + (j + 1) * 4 + 3}};
+      std::array<size_t, 8> wedge_north{
+          {i * n_l + j * 4 + 3, i * n_l + (j + 1) * 4 + 3, i * n_l + j * 4 + 2,
+           i * n_l + (j + 1) * 4 + 2, (i + 1) * n_l + j * 4 + 3,
+           (i + 1) * n_l + (j + 1) * 4 + 3, (i + 1) * n_l + j * 4 + 2,
+           (i + 1) * n_l + (j + 1) * 4 + 2}};
+      std::array<size_t, 8> wedge_west{
+          {i * n_l + j * 4 + 2, i * n_l + (j + 1) * 4 + 2, i * n_l + j * 4 + 0,
+           i * n_l + (j + 1) * 4 + 0, (i + 1) * n_l + j * 4 + 2,
+           (i + 1) * n_l + (j + 1) * 4 + 2, (i + 1) * n_l + j * 4 + 0,
+           (i + 1) * n_l + (j + 1) * 4 + 0}};
+      corners.push_back(wedge_south);
+      corners.push_back(wedge_east);
+      corners.push_back(wedge_north);
+      corners.push_back(wedge_west);
+    }
+  }
+  return corners;
+}
+
+std::vector<
+    std::unique_ptr<CoordinateMapBase<Frame::Logical, Frame::Inertial, 3>>>
+list_blocks(const std::vector<double> partition_along_r,
+            const std::vector<double> partition_along_z,
+            const bool use_equiangular_map) noexcept {
+  using Affine = CoordinateMaps::Affine;
+  using Affine3D = CoordinateMaps::ProductOf3Maps<Affine, Affine, Affine>;
+  using Equiangular = CoordinateMaps::Equiangular;
+  using Equiangular3DPrism =
+      CoordinateMaps::ProductOf3Maps<Equiangular, Equiangular, Affine>;
+  using Wedge2D = CoordinateMaps::Wedge2D;
+  using Wedge3DPrism = CoordinateMaps::ProductOf2Maps<Wedge2D, Affine>;
+  std::vector<
+      std::unique_ptr<CoordinateMapBase<Frame::Logical, Frame::Inertial, 3>>>
+      concatenate_blocks;
+  double circularity_inner;
+  for (size_t i = 1; i < partition_along_z.size(); i++) {
+    if (use_equiangular_map) {
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical,
+                                   Frame::Inertial>(Equiangular3DPrism{
+              Equiangular(-1.0, 1.0, -1.0 * partition_along_r.at(0) / sqrt(2.0),
+                          partition_along_r.at(0) / sqrt(2.0)),
+              Equiangular(-1.0, 1.0, -1.0 * partition_along_r.at(0) / sqrt(2.0),
+                          partition_along_r.at(0) / sqrt(2.0)),
+              Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                     partition_along_z.at(i)}}));
+    } else {
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical, Frame::Inertial>(Affine3D{
+              Affine(-1.0, 1.0, -1.0 * partition_along_r.at(0) / sqrt(2.0),
+                     partition_along_r.at(0) / sqrt(2.0)),
+              Affine(-1.0, 1.0, -1.0 * partition_along_r.at(0) / sqrt(2.0),
+                     partition_along_r.at(0) / sqrt(2.0)),
+              Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                     partition_along_z.at(i)}}));
+    }
+    circularity_inner = 0.;
+    for (size_t j = 1; j < partition_along_r.size(); j++) {
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical, Frame::Inertial>(
+              Wedge3DPrism{
+                  Wedge2D{partition_along_r.at(j - 1), partition_along_r.at(j),
+                          circularity_inner, 1.0,
+                          OrientationMap<2>{std::array<Direction<2>, 2>{
+                              {Direction<2>::upper_xi(),
+                               Direction<2>::upper_eta()}}},
+                          use_equiangular_map},
+                  Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                         partition_along_z.at(i)}}));
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical, Frame::Inertial>(
+              Wedge3DPrism{
+                  Wedge2D{partition_along_r.at(j - 1), partition_along_r.at(j),
+                          circularity_inner, 1.0,
+                          OrientationMap<2>{std::array<Direction<2>, 2>{
+                              {Direction<2>::lower_eta(),
+                               Direction<2>::upper_xi()}}},
+                          use_equiangular_map},
+                  Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                         partition_along_z.at(i)}}));
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical, Frame::Inertial>(
+              Wedge3DPrism{
+                  Wedge2D{partition_along_r.at(j - 1), partition_along_r.at(j),
+                          circularity_inner, 1.0,
+                          OrientationMap<2>{std::array<Direction<2>, 2>{
+                              {Direction<2>::lower_xi(),
+                               Direction<2>::lower_eta()}}},
+                          use_equiangular_map},
+                  Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                         partition_along_z.at(i)}}));
+      concatenate_blocks.push_back(
+          make_coordinate_map_base<Frame::Logical, Frame::Inertial>(
+              Wedge3DPrism{
+                  Wedge2D{partition_along_r.at(j - 1), partition_along_r.at(j),
+                          circularity_inner, 1.0,
+                          OrientationMap<2>{std::array<Direction<2>, 2>{
+                              {Direction<2>::upper_eta(),
+                               Direction<2>::lower_xi()}}},
+                          use_equiangular_map},
+                  Affine{-1.0, 1.0, partition_along_z.at(i - 1),
+                         partition_along_z.at(i)}}));
+      circularity_inner = 1.;
+    }
+  }
+  return concatenate_blocks;
+}
+
+std::vector<std::array<size_t, 3>> list_refinement_levels(
+    size_t refinement_level_of_square,
+    std::vector<size_t> refinement_level_along_radius,
+    std::vector<size_t> refinement_level_along_angle,
+    std::vector<size_t> refinement_level_along_z) noexcept {
+  std::vector<std::array<size_t, 3>> refinement_vector;
+  for (size_t i = 0; i < refinement_level_along_z.size(); i++) {
+    refinement_vector.push_back(
+        {{refinement_level_of_square, refinement_level_of_square,
+          refinement_level_along_z.at(i)}});
+    for (size_t j = 0; j < refinement_level_along_radius.size(); j++) {
+      std::array<size_t, 3> shell_refinement{
+          {refinement_level_along_radius.at(j),
+           refinement_level_along_angle.at(j), refinement_level_along_z.at(i)}};
+      for (size_t k = 0; k < 4; k++) {
+        refinement_vector.push_back(shell_refinement);
+      }
+    }
+  }
+  return refinement_vector;
+}
+
+std::vector<std::array<size_t, 3>> list_gridpoints(
+    std::array<size_t, 2> gridpoints_of_square,
+    std::vector<size_t> gridpoints_of_shells_along_r,
+    std::vector<size_t> gridpoints_of_shells_along_theta,
+    std::vector<size_t> gridpoints_along_z) noexcept {
+  std::vector<std::array<size_t, 3>> gridpoints_vector;
+  for (size_t i = 0; i < gridpoints_along_z.size(); i++) {
+    gridpoints_vector.push_back(
+        {{gridpoints_of_square.at(0), gridpoints_of_square.at(1),
+          gridpoints_along_z.at(i)}});
+    for (size_t j = 0; j < gridpoints_of_shells_along_r.size(); j++) {
+      std::array<size_t, 3> shell_gridpoints{
+          {gridpoints_of_shells_along_r.at(j),
+           gridpoints_of_shells_along_theta.at(j), gridpoints_along_z.at(i)}};
+      for (size_t k = 0; k < 4; k++) {
+        gridpoints_vector.push_back(shell_gridpoints);
+      }
+    }
+  }
+  return gridpoints_vector;
+}
+
+CylindricalMirror::CylindricalMirror(
+    typename PartitionInRadius::type partition_along_radius,
+    typename RefLevSquare::type refinement_level_of_square,
+    typename GridPointsSquare::type grid_points_of_square,
+    typename RefLevRadius::type refinement_level_along_radius,
+    typename GridPointsRadius::type grid_points_along_radius,
+    typename RefLevTheta::type refinement_level_along_angle,
+    typename GridPointsTheta::type grid_points_along_angle,
+    typename PartitionInZ::type partition_along_z,
+    typename RefLevZ::type refinement_level_along_z,
+    typename GridPointsZ::type grid_points_along_z,
+    typename UseEquiangularMap::type use_equiangular_map) noexcept
+    // clang-tidy: trivially copyable
+    : partition_along_radius_(std::move(partition_along_radius)),  // NOLINT
+      refinement_level_of_square_(
+          std::move(refinement_level_of_square)),                // NOLINT
+      grid_points_of_square_(std::move(grid_points_of_square)),  // NOLINT
+      refinement_level_along_radius_(
+          std::move(refinement_level_along_radius)),                   // NOLINT
+      grid_points_along_radius_(std::move(grid_points_along_radius)),  // NOLINT
+      refinement_level_along_angle_(
+          std::move(refinement_level_along_angle)),                    // NOLINT
+      grid_points_along_angle_(std::move(grid_points_along_angle)),    // NOLINT
+      partition_along_z_(std::move(partition_along_z)),                // NOLINT
+      refinement_level_along_z_(std::move(refinement_level_along_z)),  // NOLINT
+      grid_points_along_z_(std::move(grid_points_along_z)),            // NOLINT
+      use_equiangular_map_(std::move(use_equiangular_map)) {
+  ASSERT(
+      partition_along_radius_.size() - 1 ==
+              refinement_level_along_radius_.size() and
+          partition_along_radius_.size() - 1 ==
+              refinement_level_along_angle_.size(),
+      "The number of refinement levels in radial direction does not match the "
+      "number of shells.");
+
+  ASSERT(
+      partition_along_radius_.size() - 1 == grid_points_along_radius_.size() and
+          partition_along_radius_.size() - 1 == grid_points_along_angle_.size(),
+      "The number of grid points in radial direction does not match the "
+      "number of shells");
+
+  ASSERT(partition_along_z_.size() - 1 == refinement_level_along_z_.size(),
+         "The number of refinement levels in z direction does not match the "
+         "number of layers");
+
+  ASSERT(partition_along_z_.size() - 1 == grid_points_along_z_.size(),
+         "The number of grid points in z direction does not match the number "
+         "of layers");
+
+  // for (size_t i = 1; i < partition_along_radius_.size(); i++) {
+  //   ASSERT(abs(static_cast<int>(refinement_level_along_radius_.at(i - 1)) -
+  //              static_cast<int>(refinement_level_along_radius_.at(i - 1))) <
+  //              2,
+  //          "Refinement level in radial direction differs by more than one for
+  //          " "neighbouring blocks.");
+
+  //   ASSERT(abs(static_cast<int>(refinement_level_along_angle_.at(i - 1)) -
+  //              static_cast<int>(refinement_level_along_angle_.at(i))) < 2,
+  //          "Refinement level in angular direction differs by more than one "
+  //          "for neighbouring blocks.");
+  // };
+  // for (size_t i = 1; i < partition_along_z.size(); i++) {
+  //   ASSERT(abs(static_cast<int>(refinement_level_along_z_.at(i - 1)) -
+  //              static_cast<int>(refinement_level_along_z_.at(i))) < 2,
+  //          "Refinement level in z direction differs by more than one for "
+  //          "neighbouring blocks");
+  // };
+}
+
+Domain<3> CylindricalMirror::create_domain() const noexcept {
+  return Domain<3>{list_blocks(partition_along_radius_, partition_along_z_,
+                               use_equiangular_map_),
+                   list_corners(partition_along_radius_, partition_along_z_),
+                   std::vector<PairOfFaces>{}};
+}
+
+std::vector<std::array<size_t, 3>> CylindricalMirror::initial_extents() const
+    noexcept {
+  return list_gridpoints(grid_points_of_square_, grid_points_along_radius_,
+                         grid_points_along_angle_, grid_points_along_z_);
+}
+
+std::vector<std::array<size_t, 3>>
+CylindricalMirror::initial_refinement_levels() const noexcept {
+  return list_refinement_levels(
+      refinement_level_of_square_, refinement_level_along_radius_,
+      refinement_level_along_angle_, refinement_level_along_z_);
+}
+}  // namespace creators
+}  // namespace domain
