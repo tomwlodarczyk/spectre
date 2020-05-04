@@ -53,7 +53,7 @@
 #include "Utilities/Functional.hpp"
 #include "Utilities/TMPL.hpp"
 
-namespace SolveLinearEllipticProblem {
+namespace SolvePoissonProblem {
 namespace OptionTags {
 struct LinearSolverGroup {
   static std::string name() noexcept { return "LinearSolver"; }
@@ -61,7 +61,7 @@ struct LinearSolverGroup {
       "Options for the iterative linear solver";
 };
 }  // namespace OptionTags
-}  // namespace SolveLinearEllipticProblem
+}  // namespace SolvePoissonProblem
 
 /// \cond
 template <typename System, typename InitialGuess, typename BoundaryConditions>
@@ -72,7 +72,7 @@ struct Metavariables {
   using boundary_conditions = BoundaryConditions;
 
   static constexpr OptionString help{
-      "Find the solution to a linear elliptic problem.\n"
+      "Find the solution to a Poisson problem.\n"
       "Linear solver: GMRES\n"
       "Numerical flux: FirstOrderInternalPenaltyFlux"};
 
@@ -87,9 +87,9 @@ struct Metavariables {
 
   // The linear solver algorithm. We must use GMRES since the operator is
   // not positive-definite for the first-order system.
-  using linear_solver = LinearSolver::gmres::Gmres<
-      Metavariables, typename system::fields_tag,
-      SolveLinearEllipticProblem::OptionTags::LinearSolverGroup>;
+  using linear_solver =
+      LinearSolver::Gmres<Metavariables, typename system::fields_tag,
+                          SolvePoissonProblem::OptionTags::LinearSolverGroup>;
   using linear_solver_iteration_id =
       LinearSolver::Tags::IterationId<typename linear_solver::options_group>;
   // For the GMRES linear solver we need to apply the DG operator to its
