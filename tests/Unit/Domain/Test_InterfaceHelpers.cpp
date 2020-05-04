@@ -97,6 +97,14 @@ void test_interface_apply(
       interface_apply<DirectionsTag, ComputeSomethingOnInterface>(box, 2.);
   /// [interface_apply_example_stateless]
   CHECK(computed_numbers_with_struct == computed_number_on_interfaces);
+
+  {
+    // Test an invokable with `void` return value
+    size_t face_count;
+    interface_apply<DirectionsTag, tmpl::list<>, tmpl::list<>>(
+        [&face_count]() noexcept { face_count += 1; }, box);
+    CHECK(face_count == expected_result_on_interfaces.size());
+  }
 }
 
 SPECTRE_TEST_CASE("Unit.Domain.InterfaceHelpers", "[Unit][Domain]") {
