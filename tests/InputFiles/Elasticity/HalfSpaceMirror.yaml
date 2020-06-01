@@ -1,0 +1,55 @@
+# Distributed under the MIT License.
+# See LICENSE.txt for details.
+
+# Executable: SolveHalfSpaceMirror
+# Check: parse;execute
+# ExpectedOutput:
+#   ElasticitySolveHalfSpaceMirrorReductions.h5
+#   ElasticitySolveHalfSpaceMirrorVolume0.h5
+
+AnalyticSolution:
+  HalfSpaceMirror:
+    BeamWidth: 0.5 #0.177
+    AppliedForce: 1
+    Material:
+      BulkModulus: 36.36363636363637
+      ShearModulus: 30.76923076923077
+    IntegrationIntervals: 100
+    IntegrationTolerance: 1.e-13
+
+
+DomainCreator:
+  CylindricalMirror:
+    PartitionInRadius: [0.05, 0.2, 0.3, 0.4, 0.7, 1.25]
+    RefLevSquare: 3
+    GridPointsSquare: [6, 6]
+    RefLevRadius: [3, 2, 1, 2, 1]
+    GridPointsRadius: [6, 6, 6, 6, 6]
+    RefLevTheta: [3, 3, 3, 3, 3]
+    GridPointsTheta: [6, 6, 6, 6, 6]
+    PartitionInZ: [0, 0.1, 0.3, 0.7, 1.25]
+    RefLevZ: [3, 2, 2, 2]
+    GridPointsZ: [6, 6, 6, 6]
+    UseEquiangularMap: False
+
+NumericalFlux:
+  InternalPenalty:
+    PenaltyParameter: 80 # p^2 / h
+
+Observers:
+  VolumeFileName: "HalfSpaceMirrorVolume"
+  ReductionFileName: "HalfSpaceMirrorReductions"
+
+LinearSolver:
+  ConvergenceCriteria:
+    MaxIterations: 200
+    AbsoluteResidual: 0
+    RelativeResidual: 1e-5
+  Verbosity: Verbose
+
+EventsAndTriggers:
+  ? EveryNIterations:
+      N: 2
+  : - ObserveErrorNorms
+    - ObserveFields
+#    - ObserveVolumeIntegrals
