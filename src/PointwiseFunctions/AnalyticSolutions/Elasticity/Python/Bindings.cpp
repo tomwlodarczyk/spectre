@@ -9,10 +9,12 @@ namespace Elasticity {
 namespace Solutions {
 namespace py_bindings {
 void bind_halfspacemirror(py::module& m);  // NOLINT
+void bind_bent_beam(py::module& m);  // NOLINT
 }  // namespace py_bindings
 
 PYBIND11_MODULE(_PyElasticitySolutions, m) {  // NOLINT
   py_bindings::bind_halfspacemirror(m);
+  py_bindings::bind_bent_beam(m);
 }
 
 }  // namespace Solutions
