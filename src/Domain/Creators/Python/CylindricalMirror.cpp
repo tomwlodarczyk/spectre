@@ -17,11 +17,14 @@ namespace creators {
 namespace py_bindings {
 void bind_cylindrical_mirror(py::module& m) {  // NOLINT
   py::class_<CylindricalMirror, DomainCreator<3>>(m, "CylindricalMirror")
-      .def(py::init<std::vector<double>, size_t, std::array<size_t, 2>,
-                    std::vector<size_t>, std::vector<size_t>,
-                    std::vector<size_t>, std::vector<size_t>,
-                    std::vector<double>, std::vector<size_t>,
-                    std::vector<size_t>, bool>(),
+      .def(py::init<std::vector<double>, std::vector<size_t>,
+                    std::vector<std::array<size_t, 2>>,
+                    std::vector<std::vector<size_t>>,
+                    std::vector<std::vector<size_t>>,
+                    std::vector<std::vector<size_t>>,
+                    std::vector<std::vector<size_t>>, std::vector<double>,
+                    std::vector<std::vector<size_t>>,
+                    std::vector<std::vector<size_t>>, bool>(),
            py::arg("PartitioningInR"), py::arg("Square_refinement"),
            py::arg("Square_gridpoints"), py::arg("R_refinement"),
            py::arg("R_gridpoints"), py::arg("Theta_refinement"),
