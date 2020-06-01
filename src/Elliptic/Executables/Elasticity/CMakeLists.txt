@@ -34,3 +34,12 @@ add_elasticity_executable(
   Elasticity::Solutions::BentBeam
   "ElasticitySolutions"
   )
+
+# Elasticity system with for half space mirror solution
+add_elasticity_executable(
+  HalfSpaceMirror
+  "Elasticity::FirstOrderSystem<3>"
+  Elasticity::Solutions::HalfSpaceMirror
+  Elasticity::Solutions::HalfSpaceMirror
+  "ElasticitySolutions;Integration;"
+  )
