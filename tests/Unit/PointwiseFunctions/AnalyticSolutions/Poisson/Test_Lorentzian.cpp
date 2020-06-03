@@ -66,7 +66,7 @@ void test_solution() {
       {"source"}, {{{-5., 5.}}}, std::make_tuple(), DataVector(5));
 
   const Poisson::Solutions::Lorentzian<Dim> check_solution{};
-  const Poisson::Solutions::Lorentzian<Dim> created_solution =
+  const auto created_solution =
       TestHelpers::test_creation<Poisson::Solutions::Lorentzian<Dim>>("");
   CHECK(created_solution == check_solution);
   test_serialization(check_solution);
@@ -95,7 +95,8 @@ SPECTRE_TEST_CASE(
         coord_map{
             {{-1., 1., -0.5, 0.5}, {-1., 1., -0.5, 0.5}, {-1., 1., -0.5, 0.5}}};
     FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
-        solution, fluxes_computer, coord_map, 5.e1, 1.2);
+        solution, fluxes_computer, coord_map, 5.e1, 1.2,
+        [](const auto&... /*unused*/) noexcept { return std::tuple<>{}; });
   }
 
   {
