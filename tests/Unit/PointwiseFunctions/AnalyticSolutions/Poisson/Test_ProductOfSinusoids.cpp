@@ -74,7 +74,7 @@ void test_solution(const std::array<double, Dim>& wave_numbers,
       "ProductOfSinusoids", {"source"}, {{{0., 2. * M_PI}}},
       std::make_tuple(wave_numbers), DataVector(5));
 
-  Poisson::Solutions::ProductOfSinusoids<Dim> created_solution =
+  auto created_solution =
       TestHelpers::test_creation<Poisson::Solutions::ProductOfSinusoids<Dim>>(
           "WaveNumbers: " + options);
   CHECK(created_solution == solution);
@@ -100,7 +100,8 @@ SPECTRE_TEST_CASE(
     const domain::CoordinateMap<Frame::Logical, Frame::Inertial, AffineMap>
         coord_map{{-1., 1., 0., M_PI}};
     FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
-        solution, fluxes_computer, coord_map, 1.e5, 3.);
+        solution, fluxes_computer, coord_map, 1.e5, 3.,
+        [](const auto&... /*unused*/) noexcept { return std::tuple<>{}; });
   }
   {
     INFO("2D");
@@ -114,7 +115,8 @@ SPECTRE_TEST_CASE(
     const domain::CoordinateMap<Frame::Logical, Frame::Inertial, AffineMap2D>
         coord_map{{{-1., 1., 0., M_PI}, {-1., 1., 0., M_PI}}};
     FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
-        solution, fluxes_computer, coord_map, 1.e5, 3.);
+        solution, fluxes_computer, coord_map, 1.e5, 3.,
+        [](const auto&... /*unused*/) noexcept { return std::tuple<>{}; });
   }
   {
     INFO("3D");
@@ -129,6 +131,7 @@ SPECTRE_TEST_CASE(
         coord_map{
             {{-1., 1., 0., M_PI}, {-1., 1., 0., M_PI}, {-1., 1., 0., M_PI}}};
     FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
-        solution, fluxes_computer, coord_map, 1.e5, 3.);
+        solution, fluxes_computer, coord_map, 1.e5, 3.,
+        [](const auto&... /*unused*/) noexcept { return std::tuple<>{}; });
   }
 }
