@@ -266,10 +266,6 @@ apply_first_order_dg_operator(
     }
 
     // Assemble remote boundary data
-    auto remote_face_normal = face_normal;
-    for (size_t d = 0; d < volume_dim; d++) {
-      remote_face_normal.get(d) *= -1.;
-    }
     std::decay_t<decltype(local_boundary_data)> remote_boundary_data;
     if (neighbor_id == ElementId<volume_dim>::external_boundary_id()) {
       // On exterior ("ghost") faces, manufacture boundary data that represent
@@ -286,6 +282,10 @@ apply_first_order_dg_operator(
                 ghost_vars, fluxes_computer, fluxes_args...);
           },
           package_fluxes_args(element_id, dg_element, direction));
+      auto remote_face_normal = face_normal;
+      for (size_t d = 0; d < volume_dim; d++) {
+        remote_face_normal.get(d) *= -1.;
+      }
       const auto ghost_normal_dot_fluxes =
           normal_dot_flux<TagsList>(remote_face_normal, ghost_fluxes);
       remote_boundary_data = package_boundary_data(
@@ -300,6 +300,15 @@ apply_first_order_dg_operator(
       const auto direction_from_neighbor =
           neighbor_orientation(direction.opposite());
       const auto& neighbor = dg_elements.at(neighbor_id);
+      const auto neighbor_face_mesh =
+          neighbor.mesh.slice_away(direction_from_neighbor.dimension());
+      const auto neighbor_mortars = create_mortars(neighbor_id, dg_elements);
+      const auto& neighbor_mortar = neighbor_mortars.at(
+          std::make_pair(direction_from_neighbor, element_id));
+      const auto& neighbor_mortar_mesh = neighbor_mortar.first;
+      const auto& neighbor_mortar_size = neighbor_mortar.second;
+      ASSERT(neighbor_mortar_mesh == mortar_mesh,
+             "Mismatch between neighboring mortar meshes");
       const auto& remote_vars = all_variables.at(neighbor_id);
       const auto remote_fluxes = cpp17::apply(
           [&remote_vars, &fluxes_computer](const auto&... fluxes_args) {
@@ -316,18 +325,26 @@ apply_first_order_dg_operator(
           remote_fluxes, neighbor.mesh.extents(),
           direction_from_neighbor.dimension(),
           index_to_slice_at(neighbor.mesh.extents(), direction_from_neighbor));
+      auto remote_face_normal = unnormalized_face_normal(
+          neighbor_face_mesh, neighbor.element_map, direction_from_neighbor);
+      const auto remote_face_normal_magnitude = magnitude(remote_face_normal);
+      for (size_t d = 0; d < volume_dim; d++) {
+        remote_face_normal.get(d) /= get(remote_face_normal_magnitude);
+      }
       auto remote_normal_dot_fluxes =
           normal_dot_flux<TagsList>(remote_face_normal, remote_fluxes_on_face);
       remote_boundary_data = package_boundary_data(
-          face_mesh, remote_face_normal, remote_normal_dot_fluxes,
+          neighbor_face_mesh, remote_face_normal, remote_normal_dot_fluxes,
           remote_div_fluxes_on_face);
-      if (::dg::needs_projection(face_mesh, mortar_mesh, mortar_size)) {
+      if (::dg::needs_projection(neighbor_face_mesh, neighbor_mortar_mesh,
+                                 neighbor_mortar_size)) {
         remote_boundary_data = remote_boundary_data.project_to_mortar(
-            face_mesh, mortar_mesh, mortar_size);
+            neighbor_face_mesh, neighbor_mortar_mesh, neighbor_mortar_size);
       }
       if (not neighbor_orientation.is_aligned()) {
-        remote_boundary_data.orient_on_slice(mortar_mesh.extents(), dimension,
-                                             neighbor_orientation);
+        remote_boundary_data.orient_on_slice(
+            neighbor_mortar_mesh.extents(), direction_from_neighbor.dimension(),
+            neighbor_orientation.inverse_map());
       }
     }
 
