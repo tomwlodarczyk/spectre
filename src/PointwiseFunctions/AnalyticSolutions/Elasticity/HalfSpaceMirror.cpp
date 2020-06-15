@@ -29,6 +29,20 @@ HalfSpaceMirror::HalfSpaceMirror(
       absolute_tolerance_(absolute_tolerance),
       relative_tolerance_(relative_tolerance) {}
 
+HalfSpaceMirror::HalfSpaceMirror(const double beam_width,
+                                const double bulk_modulus,
+                                const double shear_modulus,
+                                const size_t no_intervals,
+                                const double absolute_tolerance,
+                                const double relative_tolerance) noexcept
+    : beam_width_(beam_width),
+      constitutive_relation_(
+          Elasticity::ConstitutiveRelations::IsotropicHomogeneous<3>{
+              bulk_modulus, shear_modulus}),
+      no_intervals_(no_intervals),
+      absolute_tolerance_(absolute_tolerance),
+      relative_tolerance_(relative_tolerance) {}
+
 tuples::TaggedTuple<Tags::Displacement<3>> HalfSpaceMirror::variables(
     const tnsr::I<DataVector, 3>& x,
     tmpl::list<Tags::Displacement<3>> /*meta*/) const noexcept {

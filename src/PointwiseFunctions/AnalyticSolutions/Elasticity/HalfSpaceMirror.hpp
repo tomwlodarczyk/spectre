@@ -133,6 +133,10 @@ class HalfSpaceMirror {
                   size_t no_intervals = 350, double absolute_tolerance = 1e-12,
                   double relative_tolerance = 1e-10) noexcept;
 
+  HalfSpaceMirror(double beam_width, double bulk_modulus, double shear_modulus,
+                  size_t no_intervals = 350, double absolute_tolerance = 1e-12,
+                  double relative_tolerance = 1e-10) noexcept;
+
   const constitutive_relation_type& constitutive_relation() const noexcept {
     return constitutive_relation_;
   }
