@@ -9,17 +9,17 @@
 #include "DataStructures/Tensor/EagerMath/Norms.hpp"
 #include "Domain/Creators/DomainCreator.hpp"
 #include "Domain/ElementId.hpp"
-//#include
-//"Helpers/PointwiseFunctions/AnalyticSolutions/Elasticity/TestHelpers.hpp"
 #include "Domain/ElementMap.hpp"
 #include "Domain/LogicalCoordinates.hpp"
 #include "Domain/Mesh.hpp"
 #include "Elliptic/Systems/Elasticity/FirstOrderSystem.hpp"
-#include "Elliptic/Systems/Elasticity/PotentialEnergy.hpp"
 #include "Elliptic/Systems/Elasticity/Tags.hpp"
 #include "Helpers/Elliptic/DiscontinuousGalerkin/TestHelpers.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/SimpleBoundaryData.hpp"
+#include "NumericalAlgorithms/LinearOperators/DefiniteIntegral.hpp"
+#include "PointwiseFunctions/AnalyticSolutions/Elasticity/BentBeam.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/Elasticity/HalfSpaceMirror.hpp"
+#include "PointwiseFunctions/Elasticity/PotentialEnergy.hpp"
 #include "PythonBindings/BoostOptional.hpp"
 #include "Utilities/GetOutput.hpp"
 
@@ -33,7 +33,6 @@ namespace py_bindings {
 namespace helpers = TestHelpers::elliptic::dg;
 
 namespace {
-
 template <size_t Dim, typename SolutionType>
 auto apply_dg_operator_impl(
     const SolutionType& solution, const DomainCreator<Dim>& domain_creator,
@@ -85,21 +84,67 @@ auto apply_dg_operator_impl(
     const auto& element_id = id_and_var.first;
     result[element_id] =
         l2_norm(get<::Elasticity::Tags::Displacement<Dim>>(id_and_var.second));
+  }
   return result;
 }
 
-template <size_t Dim>
+template <size_t Dim, typename SolutionType>
+auto evaluate_potential_energy_impl(const SolutionType& solution,
+                                    const DomainCreator<Dim>& domain_creator) {
+  const auto& constitutive_relation = solution.constitutive_relation();
+  std::unordered_map<ElementId<Dim>, double> result{};
+  const auto dg_elements = helpers::create_elements(domain_creator);
+  for (const auto& id_and_elem : dg_elements) {
+    const auto& element_id = id_and_elem.first;
+    const auto& dg_element = id_and_elem.second;
+    const auto logical_coords = logical_coordinates(dg_element.mesh);
+    const auto inertial_coords = dg_element.element_map(logical_coords);
+    typename ::Elasticity::Tags::Strain<Dim>::type strain =
+        get<::Elasticity::Tags::Strain<Dim>>(solution.variables(
+            inertial_coords, tmpl::list<::Elasticity::Tags::Strain<Dim>>{}));
+    auto potential_energy = ::Elasticity::evaluate_potential_energy<Dim>(
+        strain, inertial_coords, constitutive_relation);
+    const DataVector det_jacobian = get(determinant(dg_element.jacobian));
+    result[element_id] =
+        definite_integral(det_jacobian * potential_energy[0], dg_element.mesh);
+  }
+  return result;
+}
+
 void bind_apply_dg_operator_to_elasticity_halfspacemirror(
     py::module& m) {  // NOLINT
   m.def(("apply_dg_operator_to_elasticity_halfspacemirror"),
-        &apply_dg_operator_impl<Dim, ::Elasticity::Solutions::HalfSpaceMirror>,
+        &apply_dg_operator_impl<3, ::Elasticity::Solutions::HalfSpaceMirror>,
         py::arg("solution"), py::arg("domain_creator"),
         py::arg("dump_to_file") = boost::optional<std::string>{boost::none});
+}
+
+void bind_evaluate_potential_energy_of_elasticity_halfspacemirror(
+    py::module& m) {  // NOLINT
+  m.def(
+      ("evaluate_potential_energy_of_elasticity_halfspacemirror"),
+      &evaluate_potential_energy_impl<3,
+                                      ::Elasticity::Solutions::HalfSpaceMirror>,
+      py::arg("solution"), py::arg("domain_creator"));
+}
+
+void bind_evaluate_potential_energy_of_bent_beam(py::module& m) {  // NOLINT
+  m.def(("evaluate_potential_energy_of_bent_beam"),
+        &evaluate_potential_energy_impl<2, ::Elasticity::Solutions::BentBeam>,
+        py::arg("solution"), py::arg("domain_creator"));
 }
 }  // namespace
 
 void bind_apply_dg_operator(py::module& m) {  // NOLINT
-  bind_apply_dg_operator_to_elasticity_halfspacemirror<3>(m);
+  bind_apply_dg_operator_to_elasticity_halfspacemirror(m);
+}
+
+void bind_evaluate_potential_energy_1(py::module& m) {  // NOLINT
+  bind_evaluate_potential_energy_of_elasticity_halfspacemirror(m);
+}
+
+void bind_evaluate_potential_energy_2(py::module& m) {  // NOLINT
+  bind_evaluate_potential_energy_of_bent_beam(m);
 }
 
 }  // namespace py_bindings
