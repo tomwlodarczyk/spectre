@@ -1,6 +1,7 @@
 // Distributed under the MIT License.
 // See LICENSE.txt for details.
 
+#include <cmath>
 #include <cstddef>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -17,11 +18,13 @@
 #include "Helpers/Elliptic/DiscontinuousGalerkin/TestHelpers.hpp"
 #include "NumericalAlgorithms/DiscontinuousGalerkin/SimpleBoundaryData.hpp"
 #include "NumericalAlgorithms/LinearOperators/DefiniteIntegral.hpp"
+#include "NumericalAlgorithms/LinearOperators/PartialDerivatives.tpp"
 #include "PointwiseFunctions/AnalyticSolutions/Elasticity/BentBeam.hpp"
 #include "PointwiseFunctions/AnalyticSolutions/Elasticity/HalfSpaceMirror.hpp"
 #include "PointwiseFunctions/Elasticity/PotentialEnergy.hpp"
 #include "PythonBindings/BoostOptional.hpp"
 #include "Utilities/GetOutput.hpp"
+#include "Utilities/TaggedTuple.hpp"
 
 namespace py = pybind11;
 
@@ -99,14 +102,63 @@ auto evaluate_potential_energy_impl(const SolutionType& solution,
     const auto& dg_element = id_and_elem.second;
     const auto logical_coords = logical_coordinates(dg_element.mesh);
     const auto inertial_coords = dg_element.element_map(logical_coords);
-    typename ::Elasticity::Tags::Strain<Dim>::type strain =
-        get<::Elasticity::Tags::Strain<Dim>>(solution.variables(
-            inertial_coords, tmpl::list<::Elasticity::Tags::Strain<Dim>>{}));
-    auto potential_energy = ::Elasticity::evaluate_potential_energy<Dim>(
+    // typename ::Elasticity::Tags::Strain<Dim>::type strain =
+    //     get<::Elasticity::Tags::Strain<Dim>>(solution.variables(
+    //         inertial_coords, tmpl::list<::Elasticity::Tags::Strain<Dim>>{}));
+   const auto displacement = variables_from_tagged_tuple(solution.variables(
+        inertial_coords, tmpl::list<::Elasticity::Tags::Displacement<Dim>>{}));
+    const auto grad_displacement =
+        get<::Tags::deriv<::Elasticity::Tags::Displacement<Dim>,
+                          tmpl::size_t<Dim>, Frame::Inertial>>(
+            partial_derivatives<
+                // The compiler error was here: This must be a tmpl::list<>
+                tmpl::list<::Elasticity::Tags::Displacement<Dim>>>(
+                displacement, dg_element.mesh, dg_element.inv_jacobian));
+    auto strain =
+        make_with_value<tnsr::ii<DataVector, Dim>>(grad_displacement, 0.);
+    for (size_t i = 0; i < Dim; i++) {
+      // Diagonal elements
+      strain.get(i, i) = grad_displacement.get(i, i);
+      // Symmetric off-diagonal elements
+      for (size_t j = 0; j < i; j++) {
+        strain.get(i, j) =
+            0.5 * (grad_displacement.get(i, j) + grad_displacement.get(j, i));
+      }
+    }
+    const auto potential_energy = ::Elasticity::potential_energy_density<Dim>(
         strain, inertial_coords, constitutive_relation);
     const DataVector det_jacobian = get(determinant(dg_element.jacobian));
-    result[element_id] =
-        definite_integral(det_jacobian * potential_energy[0], dg_element.mesh);
+    // result[element_id] = definite_integral(det_jacobian, dg_element.mesh);
+    result[element_id] = definite_integral(det_jacobian * get(potential_energy),
+                                           dg_element.mesh);
+  }
+  return result;
+}
+
+auto test_cos2_impl(const DomainCreator<3>& domain_creator) {
+  std::unordered_map<ElementId<3>, double> result{};
+  const auto dg_elements = helpers::create_elements(domain_creator);
+  for (const auto& id_and_elem : dg_elements) {
+    const auto& element_id = id_and_elem.first;
+    const auto& dg_element = id_and_elem.second;
+    const auto logical_coords = logical_coordinates(dg_element.mesh);
+    const auto x = dg_element.element_map(logical_coords);
+    const auto radius2 = square(get<0>(x)) + square(get<1>(x));
+    Variables<tmpl::list<::Tags::TempScalar<0>>> cos2_phi =
+        square(get<0>(x)) / radius2;
+    auto analytical_deriv = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
+    get<0>(analytical_deriv) = 2. * get<0>(x) * square(get<1>(x)) / radius2;
+    get<1>(analytical_deriv) = -2. * square(get<0>(x)) * get<1>(x) / radius2;
+    const auto grad_cos2_phi = get<
+        ::Tags::deriv<::Tags::TempScalar<0>, tmpl::size_t<3>, Frame::Inertial>>(
+        partial_derivatives<tmpl::list<::Tags::TempScalar<0>>>(
+            cos2_phi, dg_element.mesh, dg_element.inv_jacobian));
+    auto residual =
+        make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
+    for (size_t i = 0; i < 3; i++) {
+      residual.get(i) = analytical_deriv.get(i) - grad_cos2_phi.get(i);
+    }
+    result[element_id] = l2_norm(residual);
   }
   return result;
 }
@@ -128,10 +180,8 @@ void bind_evaluate_potential_energy_of_elasticity_halfspacemirror(
       py::arg("solution"), py::arg("domain_creator"));
 }
 
-void bind_evaluate_potential_energy_of_bent_beam(py::module& m) {  // NOLINT
-  m.def(("evaluate_potential_energy_of_bent_beam"),
-        &evaluate_potential_energy_impl<2, ::Elasticity::Solutions::BentBeam>,
-        py::arg("solution"), py::arg("domain_creator"));
+void bind_test_cos2(py::module& m) {  // NOLINT
+  m.def(("test_cos2"), &test_cos2_impl, py::arg("domain_creator"));
 }
 }  // namespace
 
@@ -139,12 +189,13 @@ void bind_apply_dg_operator(py::module& m) {  // NOLINT
   bind_apply_dg_operator_to_elasticity_halfspacemirror(m);
 }
 
-void bind_evaluate_potential_energy_1(py::module& m) {  // NOLINT
+void bind_evaluate_potential_energy_of_halfspacemirror(
+    py::module& m) {  // NOLINT
   bind_evaluate_potential_energy_of_elasticity_halfspacemirror(m);
 }
 
-void bind_evaluate_potential_energy_2(py::module& m) {  // NOLINT
-  bind_evaluate_potential_energy_of_bent_beam(m);
+void bind_cos2(py::module& m) {  // NOLINT
+  bind_test_cos2(m);
 }
 
 }  // namespace py_bindings

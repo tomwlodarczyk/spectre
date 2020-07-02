@@ -9,14 +9,14 @@ spectre_python_add_module(
   MODULE_PATH "Domain"
   SOURCES
   Bindings.cpp
-  Brick.cpp
+  #Brick.cpp
   Cylinder.cpp
   CylindricalMirror.cpp
   DomainCreator.cpp
   Interval.cpp
   Rectangle.cpp
-  Shell.cpp
-  Sphere.cpp
+  #Shell.cpp
+  #Sphere.cpp
   )
 
 spectre_python_link_libraries(

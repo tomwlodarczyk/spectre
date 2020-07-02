@@ -33,48 +33,44 @@ struct Inertial;
 namespace domain {
 namespace creators {
 
+template <typename data_type>
+data_type elementwise_addition(const data_type first_array,
+                               const data_type second_array) noexcept {
+  ASSERT(first_array.size() == second_array.size(),
+         "The array sizes are a:"
+             << first_array.size() << " and b: " << second_array.size()
+             << ", but must be equal for elementwise addition.");
+  data_type result{};
+  for (size_t i = 0; i < first_array.size(); i++) {
+    result.at(i) = first_array.at(i) + second_array.at(i);
+  }
+  return result;
+}
+
 std::vector<std::array<size_t, 8>> list_corners(
     std::vector<double> partition_along_r,
     std::vector<double> partition_along_z) {
-  std::vector<std::array<size_t, 8>> corners;
-  size_t n_l =
-      4 * (partition_along_r.size());  // number of corners in each layer
-  for (size_t i = 0; i < partition_along_z.size() - 1; i++) {
-    std::array<size_t, 8> square_corners{
-        {i * n_l + 0, i * n_l + 1, i * n_l + 2, i * n_l + 3, (i + 1) * n_l + 0,
-         (i + 1) * n_l + 1, (i + 1) * n_l + 2, (i + 1) * n_l + 3}};
-    corners.push_back(square_corners);
-    for (size_t j = 0; j < partition_along_r.size() - 1; j++) {
-      std::array<size_t, 8> wedge_south{
-          {i * n_l + j * 4 + 0, i * n_l + (j + 1) * 4 + 0, i * n_l + j * 4 + 1,
-           i * n_l + (j + 1) * 4 + 1, (i + 1) * n_l + j * 4 + 0,
-           (i + 1) * n_l + (j + 1) * 4 + 0, (i + 1) * n_l + j * 4 + 1,
-           (i + 1) * n_l + (j + 1) * 4 + 1}};
-      // std::array<size_t, 8> wedge_east{
-      //     {i * n_l + j * 4 + 1, i * n_l + (j + 1) * 4 + 1, i * n_l + j * 4 +
-      //     3,
-      //      i * n_l + (j + 1) * 4 + 3, (i + 1) * n_l + j * 4 + 1,
-      //      (i + 1) * n_l + (j + 1) * 4 + 1, (i + 1) * n_l + j * 4 + 3,
-      //      (i + 1) * n_l + (j + 1) * 4 + 3}};
-      // std::array<size_t, 8> wedge_north{
-      //     {i * n_l + j * 4 + 3, i * n_l + (j + 1) * 4 + 3, i * n_l + j * 4 +
-      //     2,
-      //      i * n_l + (j + 1) * 4 + 2, (i + 1) * n_l + j * 4 + 3,
-      //      (i + 1) * n_l + (j + 1) * 4 + 3, (i + 1) * n_l + j * 4 + 2,
-      //      (i + 1) * n_l + (j + 1) * 4 + 2}};
-      // std::array<size_t, 8> wedge_west{
-      //     {i * n_l + j * 4 + 2, i * n_l + (j + 1) * 4 + 2, i * n_l + j * 4 +
-      //     0,
-      //      i * n_l + (j + 1) * 4 + 0, (i + 1) * n_l + j * 4 + 2,
-      //      (i + 1) * n_l + (j + 1) * 4 + 2, (i + 1) * n_l + j * 4 + 0,
-      //      (i + 1) * n_l + (j + 1) * 4 + 0}};
-      corners.push_back(wedge_south);
-      // corners.push_back(wedge_east);
-      // corners.push_back(wedge_north);
-      // corners.push_back(wedge_west);
+      const size_t no_shells{partition_along_r.size()-1};
+      const size_t no_layers{partition_along_z.size()-1};
+  using block_corners = std::array<size_t, 8>;
+  std::vector<block_corners> corner_list;
+  const size_t n_l = 4 * (no_shells + 1);  // number of corners in per layer
+  const block_corners center{{0, 1, 2, 3, n_l + 0, n_l + 1, n_l + 2, n_l + 3}};
+  const block_corners east{{1, 5, 3, 7, n_l + 1, n_l + 5, n_l + 3, n_l + 7}};
+  const block_corners north{{3, 7, 2, 6, n_l + 3, n_l + 7, n_l + 2, n_l + 6}};
+  const block_corners west{{2, 6, 0, 4, n_l + 2, n_l + 6, n_l + 0, n_l + 4}};
+  const block_corners south{{0, 4, 1, 5, n_l + 0, n_l + 4, n_l + 1, n_l + 5}};
+  for (size_t i = 0; i < no_layers; i++) {
+    corner_list.push_back(elementwise_addition(center, make_array<8>(i * n_l)));
+    for (size_t j = 0; j < no_shells; j++) {
+      auto offset = make_array<8>(i * n_l + 4 * j);
+      corner_list.push_back(elementwise_addition(east, offset));   //+x wedge
+      // corner_list.push_back(elementwise_addition(north, offset));  //+y wedge
+      // corner_list.push_back(elementwise_addition(west, offset));   //-x wedge
+      // corner_list.push_back(elementwise_addition(south, offset));  //-y wedge
     }
   }
-  return corners;
+  return corner_list;
 }
 
 std::vector<

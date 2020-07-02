@@ -39,7 +39,7 @@ namespace creators {
 template <size_t VolumeDim>
 class AlignedLattice;
 class BinaryCompactObject;
-class Brick;
+// class Brick;
 class Cylinder;
 class CylindricalMirror;
 class Disk;
@@ -48,8 +48,8 @@ class Rectangle;
 class RotatedBricks;
 class RotatedIntervals;
 class RotatedRectangles;
-class Shell;
-class Sphere;
+// class Shell;
+// class Sphere;
 class FrustalCloak;
 /// \endcond
 }  // namespace creators
@@ -74,13 +74,15 @@ struct domain_creators<2> {
 };
 template <>
 struct domain_creators<3> {
-  using creators =
-      tmpl::list<domain::creators::AlignedLattice<3>,
-                 domain::creators::BinaryCompactObject, domain::creators::Brick,
-                 domain::creators::Cylinder,
-                 domain::creators::CylindricalMirror,
-                 domain::creators::RotatedBricks, domain::creators::Shell,
-                 domain::creators::Sphere, domain::creators::FrustalCloak>;
+  using creators = tmpl::list<domain::creators::AlignedLattice<3>,
+                              domain::creators::BinaryCompactObject,
+                              //  domain::creators::Brick,
+                              domain::creators::Cylinder,
+                              domain::creators::CylindricalMirror,
+                              domain::creators::RotatedBricks,
+                              //  domain::creators::Shell,
+                              //  domain::creators::Sphere,
+                              domain::creators::FrustalCloak>;
 };
 }  // namespace DomainCreators_detail
 
@@ -119,7 +121,7 @@ class DomainCreator {
 
 #include "Domain/Creators/AlignedLattice.hpp"
 #include "Domain/Creators/BinaryCompactObject.hpp"
-#include "Domain/Creators/Brick.hpp"
+// #include "Domain/Creators/Brick.hpp"
 #include "Domain/Creators/Cylinder.hpp"
 #include "Domain/Creators/CylindricalMirror.hpp"
 #include "Domain/Creators/Disk.hpp"
@@ -129,5 +131,5 @@ class DomainCreator {
 #include "Domain/Creators/RotatedBricks.hpp"
 #include "Domain/Creators/RotatedIntervals.hpp"
 #include "Domain/Creators/RotatedRectangles.hpp"
-#include "Domain/Creators/Shell.hpp"
-#include "Domain/Creators/Sphere.hpp"
+// #include "Domain/Creators/Shell.hpp"
+// #include "Domain/Creators/Sphere.hpp"

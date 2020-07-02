@@ -21,6 +21,8 @@ spectre_python_link_libraries(
     EllipticDgTestHelpers
     Elasticity
     ElasticitySolutions
+    ElasticPotentialEnergy
+    LinearOperators
     ${BLAS_LIBRARIES}
     ${GSL_LIBRARIES}
   )

@@ -33,6 +33,26 @@
 #include "Utilities/TMPL.hpp"
 #include "Utilities/TaggedTuple.hpp"
 
+#include "DataStructures/Tensor/EagerMath/Norms.hpp"
+#include "Domain/Creators/CylindricalMirror.hpp"
+#include "Domain/Creators/DomainCreator.hpp"
+#include "Domain/ElementId.hpp"
+#include "Domain/ElementMap.hpp"
+#include "Domain/LogicalCoordinates.hpp"
+#include "Domain/Mesh.hpp"
+#include "Elliptic/Systems/Elasticity/FirstOrderSystem.hpp"
+#include "Elliptic/Systems/Elasticity/Tags.hpp"
+#include "Helpers/Elliptic/DiscontinuousGalerkin/TestHelpers.hpp"
+#include "NumericalAlgorithms/DiscontinuousGalerkin/SimpleBoundaryData.hpp"
+#include "NumericalAlgorithms/LinearOperators/DefiniteIntegral.hpp"
+#include "Parallel/Printf.hpp"
+#include "PointwiseFunctions/AnalyticSolutions/Elasticity/BentBeam.hpp"
+#include "PointwiseFunctions/AnalyticSolutions/Elasticity/HalfSpaceMirror.hpp"
+#include "PointwiseFunctions/Elasticity/PotentialEnergy.hpp"
+#include "Utilities/GetOutput.hpp"
+
+namespace helpers = TestHelpers::elliptic::dg;
+
 namespace {
 
 struct HalfSpaceMirrorProxy : Elasticity::Solutions::HalfSpaceMirror {
@@ -78,65 +98,135 @@ SPECTRE_TEST_CASE(
   const Elasticity::ConstitutiveRelations::IsotropicHomogeneous<dim>
       constitutive_relation{36.36363636363637, 30.76923076923077};
   const HalfSpaceMirrorProxy solution{0.177, constitutive_relation, 350};
-  pypp::check_with_random_values<1,
-                                 tmpl::list<Elasticity::Tags::Displacement<dim>,
-                                            Elasticity::Tags::Strain<dim>>>(
-      &HalfSpaceMirrorProxy::field_variables, solution,
-      "AnalyticSolutions.Elasticity.HalfSpaceMirror",
-      {"displacement", "strain"}, {{{0., 3.}}},
-      std::make_tuple(0.177, 36.36363636363637, 30.76923076923077),
-      DataVector(5));
-  pypp::check_with_random_values<
-      1, tmpl::list<Tags::FixedSource<Elasticity::Tags::Displacement<dim>>>>(
-      &HalfSpaceMirrorProxy::source_variables, solution,
-      "AnalyticSolutions.Elasticity.HalfSpaceMirror", {"source"}, {{{0., 3.}}},
-      std::make_tuple(), DataVector(5));
+  // pypp::check_with_random_values<1,
+  //                            tmpl::list<Elasticity::Tags::Displacement<dim>,
+  //                                       Elasticity::Tags::Strain<dim>>>(
+  //     &HalfSpaceMirrorProxy::field_variables, solution,
+  //     "AnalyticSolutions.Elasticity.HalfSpaceMirror",
+  //     {"displacement", "strain"}, {{{0., 3.}}},
+  //     std::make_tuple(0.177, 36.36363636363637, 30.76923076923077),
+  //     DataVector(5));
+  // pypp::check_with_random_values<
+  //     1, tmpl::list<Tags::FixedSource<Elasticity::Tags::Displacement<dim>>>>(
+  //     &HalfSpaceMirrorProxy::source_variables, solution,
+  //     "AnalyticSolutions.Elasticity.HalfSpaceMirror", {"source"},
+  //     {{{0., 3.}}}, std::make_tuple(), DataVector(5));
+
+  // {
+  //   INFO(
+  //       "Test that functions behave expectedly at the origin and vanish far "
+  //       "away from the source");
+  //   const tnsr::I<DataVector, 3> x{
+  //       {{{0., 20., 0.}, {0., 0., 0.}, {0., 0., 20.}}}};
+  //   const auto solution_vars = variables_from_tagged_tuple(
+  //       solution.variables(x, tmpl::list<Elasticity::Tags::Displacement<3>,
+  //                                        Elasticity::Tags::Strain<3>>{}));
+  //   Variables<tmpl::list<Elasticity::Tags::Displacement<3>,
+  //                        Elasticity::Tags::Strain<3>>>
+  //       expected_vars{3};
+  //   auto& expected_displacement =
+  //       get<Elasticity::Tags::Displacement<3>>(expected_vars);
+  //   get<0>(expected_displacement) = DataVector{0., 0., 0.};
+  //   get<1>(expected_displacement) = DataVector{0., 0., 0.};
+  //   get<2>(expected_displacement) = DataVector{4.30e-02, 0., 0.};
+  //   auto& expected_strain = get<Elasticity::Tags::Strain<3>>(expected_vars);
+  //   get<0, 0>(expected_strain) = DataVector{-5.45e-02, 0., 0.};
+  //   get<1, 0>(expected_strain) = DataVector{0., 0., 0.};
+  //   get<2, 0>(expected_strain) = DataVector{0., 0., 0.};
+  //   get<1, 1>(expected_strain) = DataVector{-5.45e-02, 0., 0.};
+  //   get<2, 1>(expected_strain) = DataVector{0., 0., 0.};
+  //   get<2, 2>(expected_strain) = DataVector{-10.90e-02, 0., 0.};
+  //   Approx custom_approx = Approx::custom().margin(5e-4);
+  //   CHECK_VARIABLES_CUSTOM_APPROX(solution_vars, expected_vars,
+  //   custom_approx);
+  // };
+
+  // {
+  //   INFO("Test elasticity system with half-space mirror");
+  //   // Verify that the solution numerically solves the system and that the
+  //   // discretization error decreases exponentially with polynomial order
+  //   using system = Elasticity::FirstOrderSystem<dim>;
+  //   const typename system::fluxes fluxes_computer{};
+  //   using AffineMap = domain::CoordinateMaps::Affine;
+  //   using AffineMap3D =
+  //       domain::CoordinateMaps::ProductOf3Maps<AffineMap, AffineMap,
+  //       AffineMap>;
+  //   const domain::CoordinateMap<Frame::Logical, Frame::Inertial, AffineMap3D>
+  //       coord_map{{{-1., 1., 0., 0.5}, {-1., 1., 0., 0.5}, {-1., 1., 0.,
+  //       0.5}}};
+  //   FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
+  //       solution, fluxes_computer, coord_map, 1.e4, 1.,
+  //       [&constitutive_relation, &coord_map](const Mesh<3>& mesh) {
+  //         const auto logical_coords = logical_coordinates(mesh);
+  //         const auto inertial_coords = coord_map(logical_coords);
+  //         return std::make_tuple(constitutive_relation, inertial_coords);
+  //       });
+  // };
 
   {
-    INFO(
-        "Test that functions behave expectedly at the origin and vanish far "
-        "away from the source");
-    const tnsr::I<DataVector, 3> x{
-        {{{0., 20., 0.}, {0., 0., 0.}, {0., 0., 20.}}}};
-    const auto solution_vars = variables_from_tagged_tuple(
-        solution.variables(x, tmpl::list<Elasticity::Tags::Displacement<3>,
-                                         Elasticity::Tags::Strain<3>>{}));
-    Variables<tmpl::list<Elasticity::Tags::Displacement<3>,
-                         Elasticity::Tags::Strain<3>>>
-        expected_vars{3};
-    auto& expected_displacement =
-        get<Elasticity::Tags::Displacement<3>>(expected_vars);
-    get<0>(expected_displacement) = DataVector{0., 0., 0.};
-    get<1>(expected_displacement) = DataVector{0., 0., 0.};
-    get<2>(expected_displacement) = DataVector{4.30e-02, 0., 0.};
-    auto& expected_strain = get<Elasticity::Tags::Strain<3>>(expected_vars);
-    get<0, 0>(expected_strain) = DataVector{-5.45e-02, 0., 0.};
-    get<1, 0>(expected_strain) = DataVector{0., 0., 0.};
-    get<2, 0>(expected_strain) = DataVector{0., 0., 0.};
-    get<1, 1>(expected_strain) = DataVector{-5.45e-02, 0., 0.};
-    get<2, 1>(expected_strain) = DataVector{0., 0., 0.};
-    get<2, 2>(expected_strain) = DataVector{-10.90e-02, 0., 0.};
-    Approx custom_approx = Approx::custom().margin(5e-4);
-    CHECK_VARIABLES_CUSTOM_APPROX(solution_vars, expected_vars, custom_approx);
-  };
-
-  {
-    INFO("Test elasticity system with half-space mirror");
-    // Verify that the solution numerically solves the system and that the
-    // discretization error decreases exponentially with polynomial order
-    using system = Elasticity::FirstOrderSystem<dim>;
+    static constexpr size_t Dim = 3;
+    const domain::creators::CylindricalMirror domain_creator{
+        {0.05, 0.2, 0.3, 0.4, 0.7, 1.25},
+        {0, 0, 0, 0},
+        {{8, 8}, {7, 7}, {6, 6}, {5, 5}},
+        {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}},
+        {{7, 6, 6, 6, 4}, {7, 6, 5, 5, 4}, {6, 5, 5, 5, 4}, {6, 5, 5, 5, 4}},
+        {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}},
+        {{7, 6, 6, 6, 4}, {7, 6, 5, 5, 4}, {6, 5, 5, 5, 4}, {6, 5, 5, 5, 4}},
+        {0, 0.1, 0.3, 0.7, 1.25},
+        {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0}},
+        {{7, 6, 6, 6, 4}, {7, 6, 5, 5, 4}, {6, 5, 5, 5, 4}, {6, 5, 5, 5, 4}},
+        false};
+    const boost::optional<std::string> file_to_dump_to{boost::none};
+    using system = ::Elasticity::FirstOrderSystem<Dim>;
+    Parallel::printf("A\n");
     const typename system::fluxes fluxes_computer{};
-    using AffineMap = domain::CoordinateMaps::Affine;
-    using AffineMap3D =
-        domain::CoordinateMaps::ProductOf3Maps<AffineMap, AffineMap, AffineMap>;
-    const domain::CoordinateMap<Frame::Logical, Frame::Inertial, AffineMap3D>
-        coord_map{{{-1., 1., 0., 0.5}, {-1., 1., 0., 0.5}, {-1., 1., 0., 0.5}}};
-    FirstOrderEllipticSolutionsTestHelpers::verify_smooth_solution<system>(
-        solution, fluxes_computer, coord_map, 1.e4, 1.,
-        [&constitutive_relation, &coord_map](const Mesh<3>& mesh) {
-          const auto logical_coords = logical_coordinates(mesh);
-          const auto inertial_coords = coord_map(logical_coords);
+    const auto& constitutive_relation = solution.constitutive_relation();
+    const auto package_fluxes_args = make_overloader(
+        [&constitutive_relation](const ElementId<Dim>& /*element_id*/,
+                                 const helpers::DgElement<Dim>& dg_element) {
+          const auto logical_coords = logical_coordinates(dg_element.mesh);
+          const auto inertial_coords = dg_element.element_map(logical_coords);
+          return std::make_tuple(constitutive_relation, inertial_coords);
+        },
+        [&constitutive_relation](const ElementId<Dim>& /*element_id*/,
+                                 const helpers::DgElement<Dim>& dg_element,
+                                 const Direction<Dim>& direction) {
+          const auto face_mesh =
+              dg_element.mesh.slice_away(direction.dimension());
+          const auto logical_coords =
+              interface_logical_coordinates(face_mesh, direction);
+          const auto inertial_coords = dg_element.element_map(logical_coords);
           return std::make_tuple(constitutive_relation, inertial_coords);
         });
+    Parallel::printf("B\n");
+
+    const auto operator_applied_to_solution =
+        helpers::apply_dg_operator_to_solution<system>(
+            solution, domain_creator,
+            [&fluxes_computer, &package_fluxes_args](const auto&... args) {
+              return helpers::apply_first_order_dg_operator<system>(
+                  args..., fluxes_computer, package_fluxes_args,
+                  // The fluxes and sources need no arguments, so we return
+                  // empty tuples
+                  [](const auto&... /* unused */) { return std::tuple<>{}; },
+                  // Disable boundary terms since the analytic solutions are
+                  // continuous across element boundaries.
+                  [](const auto&... /* unused */) {
+                    return TestHelpers::elliptic::dg::EmptyBoundaryData{};
+                  },
+                  [](const auto&... /* unused */) {});
+            },
+            file_to_dump_to);
+    Parallel::printf("C\n");
+    //    apply_dg_operator(solution, domain_creator);
+    // Convert the data to a type that Python understands. We just take a
+    // norm of the Displacement field over each element for now.
+    std::unordered_map<ElementId<Dim>, double> result{};
+    for (const auto& id_and_var : operator_applied_to_solution) {
+      const auto& element_id = id_and_var.first;
+      result[element_id] = l2_norm(
+          get<::Elasticity::Tags::Displacement<Dim>>(id_and_var.second));
+    }
   };
 }
