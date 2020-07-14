@@ -135,6 +135,49 @@ auto evaluate_potential_energy_impl(const SolutionType& solution,
   return result;
 }
 
+template <size_t Dim, typename SolutionType>
+auto evaluate_strain_error_impl(const SolutionType& solution,
+                                const DomainCreator<Dim>& domain_creator) {
+  std::unordered_map<ElementId<Dim>, double> result{};
+  const auto dg_elements = helpers::create_elements(domain_creator);
+  for (const auto& id_and_elem : dg_elements) {
+    const auto& element_id = id_and_elem.first;
+    const auto& dg_element = id_and_elem.second;
+    const auto logical_coords = logical_coordinates(dg_element.mesh);
+    const auto inertial_coords = dg_element.element_map(logical_coords);
+    typename ::Elasticity::Tags::Strain<Dim>::type analytical_strain =
+        get<::Elasticity::Tags::Strain<Dim>>(solution.variables(
+            inertial_coords, tmpl::list<::Elasticity::Tags::Strain<Dim>>{}));
+    const auto displacement = variables_from_tagged_tuple(solution.variables(
+        inertial_coords, tmpl::list<::Elasticity::Tags::Displacement<Dim>>{}));
+    const auto grad_displacement = get<
+        ::Tags::deriv<::Elasticity::Tags::Displacement<Dim>, tmpl::size_t<Dim>,
+                      Frame::Inertial>>(
+        partial_derivatives<tmpl::list<::Elasticity::Tags::Displacement<Dim>>>(
+            displacement, dg_element.mesh, dg_element.inv_jacobian));
+    auto strain =
+        make_with_value<tnsr::ii<DataVector, Dim>>(grad_displacement, 0.);
+    for (size_t i = 0; i < Dim; i++) {
+      // Diagonal elements
+      strain.get(i, i) = grad_displacement.get(i, i);
+      // Symmetric off-diagonal elements
+      for (size_t j = 0; j < i; j++) {
+        strain.get(i, j) =
+            0.5 * (grad_displacement.get(i, j) + grad_displacement.get(j, i));
+      }
+    }
+    auto residual =
+        make_with_value<tnsr::ij<DataVector, 3>>(inertial_coords, 0.);
+    for (size_t i = 0; i < 3; i++) {
+      for (size_t j = 0; j < 3; j++) {
+        residual.get(i, j) = strain.get(i, j) - analytical_strain.get(i, j);
+      }
+    }
+    result[element_id] = l2_norm(residual);
+  }
+  return result;
+}
+
 auto test_cos2_impl(const DomainCreator<3>& domain_creator) {
   std::unordered_map<ElementId<3>, double> result{};
   const auto dg_elements = helpers::create_elements(domain_creator);
@@ -153,8 +196,7 @@ auto test_cos2_impl(const DomainCreator<3>& domain_creator) {
         ::Tags::deriv<::Tags::TempScalar<0>, tmpl::size_t<3>, Frame::Inertial>>(
         partial_derivatives<tmpl::list<::Tags::TempScalar<0>>>(
             cos2_phi, dg_element.mesh, dg_element.inv_jacobian));
-    auto residual =
-        make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
+    auto residual = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
     for (size_t i = 0; i < 3; i++) {
       residual.get(i) = analytical_deriv.get(i) - grad_cos2_phi.get(i);
     }
@@ -180,6 +222,15 @@ void bind_evaluate_potential_energy_of_elasticity_halfspacemirror(
       py::arg("solution"), py::arg("domain_creator"));
 }
 
+void bind_evaluate_strain_error_for_elasticity_halfspacemirror(
+    py::module& m) {  // NOLINT
+  m.def(
+      ("evaluate_strain_error_for_halfspacemirror"),
+      &evaluate_strain_error_impl<3,
+                                      ::Elasticity::Solutions::HalfSpaceMirror>,
+      py::arg("solution"), py::arg("domain_creator"));
+}
+
 void bind_test_cos2(py::module& m) {  // NOLINT
   m.def(("test_cos2"), &test_cos2_impl, py::arg("domain_creator"));
 }
@@ -192,6 +243,11 @@ void bind_apply_dg_operator(py::module& m) {  // NOLINT
 void bind_evaluate_potential_energy_of_halfspacemirror(
     py::module& m) {  // NOLINT
   bind_evaluate_potential_energy_of_elasticity_halfspacemirror(m);
+}
+
+void bind_evaluate_strain_error_for_halfspacemirror(
+    py::module& m) {  // NOLINT
+  bind_evaluate_strain_error_for_elasticity_halfspacemirror(m);
 }
 
 void bind_cos2(py::module& m) {  // NOLINT
