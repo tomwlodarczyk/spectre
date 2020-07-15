@@ -38,8 +38,8 @@ namespace creators {
 /// \cond
 template <size_t VolumeDim>
 class AlignedLattice;
-class BinaryCompactObject;
-// class Brick;
+// class BinaryCompactObject;
+class Brick;
 class Cylinder;
 class CylindricalMirror;
 class Disk;
@@ -75,8 +75,8 @@ struct domain_creators<2> {
 template <>
 struct domain_creators<3> {
   using creators = tmpl::list<domain::creators::AlignedLattice<3>,
-                              domain::creators::BinaryCompactObject,
-                              //  domain::creators::Brick,
+                              // domain::creators::BinaryCompactObject,
+                              domain::creators::Brick,
                               domain::creators::Cylinder,
                               domain::creators::CylindricalMirror,
                               domain::creators::RotatedBricks,

@@ -55,11 +55,11 @@ std::vector<std::array<size_t, 8>> list_corners(
   using block_corners = std::array<size_t, 8>;
   std::vector<block_corners> corner_list;
   const size_t n_l = 4 * (no_shells + 1);  // number of corners in per layer
-  const block_corners center{{0, 1, 2, 3, n_l + 0, n_l + 1, n_l + 2, n_l + 3}};
-  const block_corners east{{1, 5, 3, 7, n_l + 1, n_l + 5, n_l + 3, n_l + 7}};
-  const block_corners north{{3, 7, 2, 6, n_l + 3, n_l + 7, n_l + 2, n_l + 6}};
-  const block_corners west{{2, 6, 0, 4, n_l + 2, n_l + 6, n_l + 0, n_l + 4}};
-  const block_corners south{{0, 4, 1, 5, n_l + 0, n_l + 4, n_l + 1, n_l + 5}};
+  const block_corners center{{0,1,2,3,n_l + 0,n_l + 1,n_l + 2,n_l + 3}};
+  const block_corners east{{1,5,3,7,n_l + 1,n_l + 5,n_l + 3,n_l + 7}};
+  // const block_corners north{{3,7,2,6,n_l + 3,n_l + 7,n_l + 2,n_l + 6}};
+  // const block_corners west{{2,6,0,4,n_l + 2,n_l + 6,n_l + 0,n_l + 4}};
+  // const block_corners south{{0,4,1,5,n_l + 0,n_l + 4,n_l + 1,n_l + 5}};
   for (size_t i = 0; i < no_layers; i++) {
     corner_list.push_back(elementwise_addition(center, make_array<8>(i * n_l)));
     for (size_t j = 0; j < no_shells; j++) {

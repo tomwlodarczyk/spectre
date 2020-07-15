@@ -125,7 +125,7 @@ std::vector<std::array<size_t, 3>> Cylinder::initial_extents() const noexcept {
       initial_number_of_grid_points_,
       initial_number_of_grid_points_,
       initial_number_of_grid_points_,
-      {{initial_number_of_grid_points_[1], initial_number_of_grid_points_[1],
+      {{initial_number_of_grid_points_[0], initial_number_of_grid_points_[0],
         initial_number_of_grid_points_[2]}}};
 }
 
