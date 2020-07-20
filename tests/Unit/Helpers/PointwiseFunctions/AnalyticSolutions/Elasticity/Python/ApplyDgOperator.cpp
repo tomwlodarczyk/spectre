@@ -82,7 +82,7 @@ auto apply_dg_operator_impl(
   //    apply_dg_operator(solution, domain_creator);
   // Convert the data to a type that Python understands. We just take a
   // norm of the Displacement field over each element for now.
-  std::unordered_map<ElementId<Dim>, std::array<double , 2>> result{};
+  std::unordered_map<ElementId<Dim>, std::array<double, 2>> result{};
   for (const auto& id_and_var : operator_applied_to_solution) {
     const auto& element_id = id_and_var.first;
     result[element_id][0] =
@@ -107,7 +107,7 @@ auto evaluate_potential_energy_impl(const SolutionType& solution,
     // typename ::Elasticity::Tags::Strain<Dim>::type strain =
     //     get<::Elasticity::Tags::Strain<Dim>>(solution.variables(
     //         inertial_coords, tmpl::list<::Elasticity::Tags::Strain<Dim>>{}));
-   const auto displacement = variables_from_tagged_tuple(solution.variables(
+    const auto displacement = variables_from_tagged_tuple(solution.variables(
         inertial_coords, tmpl::list<::Elasticity::Tags::Displacement<Dim>>{}));
     const auto grad_displacement =
         get<::Tags::deriv<::Elasticity::Tags::Displacement<Dim>,
@@ -137,32 +137,33 @@ auto evaluate_potential_energy_impl(const SolutionType& solution,
   return result;
 }
 
-auto test_cos2_impl(const DomainCreator<3>& domain_creator) {
-  std::unordered_map<ElementId<3>, double> result{};
-  const auto dg_elements = helpers::create_elements(domain_creator);
-  for (const auto& id_and_elem : dg_elements) {
-    const auto& element_id = id_and_elem.first;
-    const auto& dg_element = id_and_elem.second;
-    const auto logical_coords = logical_coordinates(dg_element.mesh);
-    const auto x = dg_element.element_map(logical_coords);
-    const auto radius2 = square(get<0>(x)) + square(get<1>(x));
-    Variables<tmpl::list<::Tags::TempScalar<0>>> cos2_phi =
-        square(get<0>(x)) / radius2;
-    auto analytical_deriv = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
-    get<0>(analytical_deriv) = 2. * get<0>(x) * square(get<1>(x)) / radius2;
-    get<1>(analytical_deriv) = -2. * square(get<0>(x)) * get<1>(x) / radius2;
-    const auto grad_cos2_phi = get<
-        ::Tags::deriv<::Tags::TempScalar<0>, tmpl::size_t<3>, Frame::Inertial>>(
-        partial_derivatives<tmpl::list<::Tags::TempScalar<0>>>(
-            cos2_phi, dg_element.mesh, dg_element.inv_jacobian));
-    auto residual = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
-    for (size_t i = 0; i < 3; i++) {
-      residual.get(i) = analytical_deriv.get(i) - grad_cos2_phi.get(i);
-    }
-    result[element_id] = l2_norm(residual);
-  }
-  return result;
-}
+// auto test_cos2_impl(const DomainCreator<3>& domain_creator) {
+//   std::unordered_map<ElementId<3>, double> result{};
+//   const auto dg_elements = helpers::create_elements(domain_creator);
+//   for (const auto& id_and_elem : dg_elements) {
+//     const auto& element_id = id_and_elem.first;
+//     const auto& dg_element = id_and_elem.second;
+//     const auto logical_coords = logical_coordinates(dg_element.mesh);
+//     const auto x = dg_element.element_map(logical_coords);
+//     const auto radius2 = square(get<0>(x)) + square(get<1>(x));
+//     Variables<tmpl::list<::Tags::TempScalar<0>>> cos2_phi =
+//         square(get<0>(x)) / radius2;
+//     auto analytical_deriv = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
+//     get<0>(analytical_deriv) = 2. * get<0>(x) * square(get<1>(x)) / radius2;
+//     get<1>(analytical_deriv) = -2. * square(get<0>(x)) * get<1>(x) / radius2;
+//     const auto grad_cos2_phi = get<
+//         ::Tags::deriv<::Tags::TempScalar<0>, tmpl::size_t<3>,
+//         Frame::Inertial>>(
+//         partial_derivatives<tmpl::list<::Tags::TempScalar<0>>>(
+//             cos2_phi, dg_element.mesh, dg_element.inv_jacobian));
+//     auto residual = make_with_value<tnsr::i<DataVector, 3>>(x, 0.);
+//     for (size_t i = 0; i < 3; i++) {
+//       residual.get(i) = analytical_deriv.get(i) - grad_cos2_phi.get(i);
+//     }
+//     result[element_id] = l2_norm(residual);
+//   }
+//   return result;
+// }
 
 void bind_apply_dg_operator_to_elasticity_halfspacemirror(
     py::module& m) {  // NOLINT
@@ -191,9 +192,9 @@ void bind_evaluate_potential_energy_of_halfspacemirror(
   bind_evaluate_potential_energy_of_elasticity_halfspacemirror(m);
 }
 
-void bind_cos2(py::module& m) {  // NOLINT
-  bind_test_cos2(m);
-}
+// void bind_cos2(py::module& m) {  // NOLINT
+//   bind_test_cos2(m);
+// }
 
 }  // namespace py_bindings
 }  // namespace Solutions

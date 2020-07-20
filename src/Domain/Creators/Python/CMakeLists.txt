@@ -9,7 +9,7 @@ spectre_python_add_module(
   MODULE_PATH "Domain"
   SOURCES
   Bindings.cpp
-  #Brick.cpp
+  Brick.cpp
   Cylinder.cpp
   CylindricalMirror.cpp
   DomainCreator.cpp

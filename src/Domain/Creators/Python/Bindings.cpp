@@ -9,7 +9,7 @@ namespace domain {
 namespace creators {
 
 namespace py_bindings {
-// void bind_brick(py::module& m);           // NOLINT
+void bind_brick(py::module& m);           // NOLINT
 void bind_cylinder(py::module& m);        // NOLINT
 void bind_cylindrical_mirror(py::module& m);        // NOLINT
 void bind_domain_creator(py::module& m);  // NOLINT
@@ -23,7 +23,7 @@ PYBIND11_MODULE(_PyDomainCreators, m) {  // NOLINT
   // Order is important: The base class `DomainCreator` needs to have its
   // bindings set up before the derived classes
   py_bindings::bind_domain_creator(m);
-  // py_bindings::bind_brick(m);
+  py_bindings::bind_brick(m);
   py_bindings::bind_cylinder(m);
   py_bindings::bind_cylindrical_mirror(m);
   py_bindings::bind_interval(m);
