@@ -54,19 +54,11 @@ namespace ConstitutiveRelations {
  *
  * \f[
  * E=\frac{9K\mu}{3K+\mu}=\frac{\mu(3\lambda+2\mu)}{\lambda+\mu}
- * \f]
- *
- * and the _Poisson ratio_
- *
- * \f[
- * \nu=\frac{3K-2\mu}{2(3K+\mu)}=\frac{\lambda}{2(\lambda+\mu)}\text{.}
- * \f]
- *
- * Inversely, these relations read:
- *
- * \f[
- * K =\frac{E}{3(1-2\nu)}, \quad
- * \lambda =\frac{E\nu}{(1+\nu)(1-2\nu)}, \quad
+ * \f] and the _Poisson ratio_ \f[
+ * \nu=\frac{3K-2\mu}{2(3K+\mu)}=\frac{\lambda}{2(\lambda+\mu)}
+ * \f]. Inversely, these relations read: \f[
+ * K =\frac{E}{3(1-2\nu)} \quad
+ * \lambda =\frac{E\nu}{(1+\nu)(1-2\nu)} \quad
  * \mu =\frac{E}{2(1+\nu)}
  * \f]
  *
@@ -77,16 +69,11 @@ namespace ConstitutiveRelations {
  * \f$T^{i3}=0=T^{3i}\f$ we find \f$\mathrm{Tr}(S)=\frac{2\mu}{\lambda +
  * 2\mu}\mathrm{Tr}^{(2)}(S)\f$, where \f$\mathrm{Tr}^{(2)}\f$ denotes that the
  * trace only applies to the two dimensions within the plane. The constitutive
- * relation thus reduces to
- *
- * \f{align}
- * T^{ij}=&-\frac{2\lambda\mu}{\lambda + 2\mu}\mathrm{Tr}^{(2)}(S)\delta^{ij} -
+ * relation thus reduces to \f[
+ * T^{ij}=-\frac{2\lambda\mu}{\lambda + 2\mu}\mathrm{Tr}^{(2)}\delta^{ij} -
  * 2\mu S^{ij} \\
- * =&-\frac{E\nu}{1-\nu^2}\mathrm{Tr}^{(2)}(S)\delta^{ij} -
- * \frac{E}{1+\nu}S^{ij}
- * \f}
- *
- * which is non-zero only in the directions of the plane. Since the stresses
+ * =-\frac{E\nu}{1-\nu^2}\mathrm{Tr}^{(2)}\delta^{ij} - \frac{E}{1+\nu}S^{ij}
+ * \f] which is non-zero only in the directions of the plane. Since the stresses
  * are also assumed to be constant along the thickness of the plane
  * \f$\partial_3T^{ij}=0\f$ the elasticity problem \f$-\partial_i T^{ij}=F^j\f$
  * reduces to two dimensions.
@@ -128,9 +115,9 @@ class IsotropicHomogeneous : public ConstitutiveRelation<Dim> {
 
   /// The constitutive relation that characterizes the elastic properties of a
   /// material
-  tnsr::II<DataVector, Dim> stress(const tnsr::ii<DataVector, Dim>& strain,
-                                   const tnsr::I<DataVector, Dim>& x) const
-      noexcept override;
+  tnsr::II<DataVector, Dim> stress(
+      const tnsr::ii<DataVector, Dim>& strain,
+      const tnsr::I<DataVector, Dim>& x) const noexcept override;
 
   /// The bulk modulus (or incompressibility) \f$K\f$
   double bulk_modulus() const noexcept;
