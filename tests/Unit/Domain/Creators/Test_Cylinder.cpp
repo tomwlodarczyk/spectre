@@ -45,14 +45,14 @@ using NoneBc =
     TestHelpers::domain::BoundaryConditions::TestNoneBoundaryCondition<3>;
 
 std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
-create_lower_boundary_condition() {
+create_lower_z_boundary_condition() {
   return std::make_unique<
       TestHelpers::domain::BoundaryConditions::TestBoundaryCondition<3>>(
       Direction<3>::lower_zeta(), 50);
 }
 
 std::unique_ptr<domain::BoundaryConditions::BoundaryCondition>
-create_upper_boundary_condition() {
+create_upper_z_boundary_condition() {
   return std::make_unique<
       TestHelpers::domain::BoundaryConditions::TestBoundaryCondition<3>>(
       Direction<3>::upper_zeta(), 50);
@@ -67,12 +67,12 @@ create_mantle_boundary_condition() {
 
 std::string boundary_conditions_string(const bool is_periodic_in_z) {
   return "  BoundaryConditions:\n"
-         "    Lower:\n" +
+         "    LowerZ:\n" +
          std::string{is_periodic_in_z ? "      Periodic\n"
                                       : "      TestBoundaryCondition:\n"
                                         "        Direction: lower-zeta\n"
                                         "        BlockId: 50\n"} +
-         "    Upper:\n" +
+         "    UpperZ:\n" +
          std::string{is_periodic_in_z ? "      Periodic\n"
                                       : "      TestBoundaryCondition:\n"
                                         "        Direction: upper-zeta\n"
@@ -88,9 +88,9 @@ auto create_boundary_conditions(const bool periodic_in_z) {
   // z-direction
   for (size_t block_id = 0; not periodic_in_z and block_id < 5; ++block_id) {
     boundary_conditions_all_blocks[block_id][Direction<3>::lower_zeta()] =
-        create_lower_boundary_condition();
+        create_lower_z_boundary_condition();
     boundary_conditions_all_blocks[block_id][Direction<3>::upper_zeta()] =
-        create_upper_boundary_condition();
+        create_upper_z_boundary_condition();
   }
   // radial direction
   for (size_t block_id = 1; block_id < 5; ++block_id) {
@@ -102,8 +102,8 @@ auto create_boundary_conditions(const bool periodic_in_z) {
 
 void test_cylinder_construction(
     const creators::Cylinder& cylinder, const double inner_radius,
-    const double outer_radius, const double lower_bound,
-    const double upper_bound, const bool is_periodic_in_z,
+    const double outer_radius, const double lower_z_bound,
+    const double upper_z_bound, const bool is_periodic_in_z,
     const std::vector<std::array<size_t, 3>>& expected_extents,
     const std::vector<std::array<size_t, 3>>& expected_refinement_level,
     const bool use_equiangular_map,
@@ -208,7 +208,7 @@ void test_cylinder_construction(
                           inner_radius / sqrt(2.0), angular_distribution),
                  Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
-                 Interval{-1.0, 1.0, lower_bound, upper_bound,
+                 Interval{-1.0, 1.0, lower_z_bound, upper_z_bound,
                           Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -216,7 +216,7 @@ void test_cylinder_construction(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, upper_bound,
+          Interval{-1.0, 1.0, lower_z_bound, upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -224,7 +224,7 @@ void test_cylinder_construction(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, upper_bound,
+          Interval{-1.0, 1.0, lower_z_bound, upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -232,7 +232,7 @@ void test_cylinder_construction(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, upper_bound,
+          Interval{-1.0, 1.0, lower_z_bound, upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -240,7 +240,7 @@ void test_cylinder_construction(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, upper_bound,
+          Interval{-1.0, 1.0, lower_z_bound, upper_z_bound,
                    Distribution::Linear}}));
 
   test_domain_construction(domain, expected_block_neighbors,
@@ -267,8 +267,8 @@ void test_cylinder_no_refinement() {
         CAPTURE(periodic_in_z);
         const double inner_radius = 1.0;
         const double outer_radius = 2.0;
-        const double lower_bound = -2.5;
-        const double upper_bound = 5.0;
+        const double lower_z_bound = -2.5;
+        const double upper_z_bound = 5.0;
         const size_t refinement_level = 2;
         const std::array<size_t, 3> grid_points{{4, 4, 3}};
 
@@ -280,14 +280,14 @@ void test_cylinder_no_refinement() {
             with_boundary_conditions
                 ? creators::Cylinder{inner_radius,
                                      outer_radius,
-                                     lower_bound,
-                                     upper_bound,
+                                     lower_z_bound,
+                                     upper_z_bound,
                                      periodic_in_z
                                          ? std::make_unique<PeriodicBc>()
-                                         : create_lower_boundary_condition(),
+                                         : create_lower_z_boundary_condition(),
                                      periodic_in_z
                                          ? std::make_unique<PeriodicBc>()
-                                         : create_upper_boundary_condition(),
+                                         : create_upper_z_boundary_condition(),
                                      create_mantle_boundary_condition(),
                                      refinement_level,
                                      grid_points,
@@ -296,8 +296,8 @@ void test_cylinder_no_refinement() {
                                      {}}
                 : creators::Cylinder{inner_radius,
                                      outer_radius,
-                                     lower_bound,
-                                     upper_bound,
+                                     lower_z_bound,
+                                     upper_z_bound,
                                      periodic_in_z,
                                      refinement_level,
                                      grid_points,
@@ -306,7 +306,7 @@ void test_cylinder_no_refinement() {
                                      {}};
         test_physical_separation(cylinder.create_domain().blocks());
         test_cylinder_construction(
-            cylinder, inner_radius, outer_radius, lower_bound, upper_bound,
+            cylinder, inner_radius, outer_radius, lower_z_bound, upper_z_bound,
             periodic_in_z, {5, grid_points},
             {5, make_array<3>(refinement_level)}, equiangular_map,
             expected_boundary_conditions);
@@ -315,15 +315,15 @@ void test_cylinder_no_refinement() {
             "Cylinder:\n"
             "  InnerRadius: 1.0\n"
             "  OuterRadius: 2.0\n"
-            "  LowerBound: -2.5\n"
-            "  UpperBound: 5.0\n"
+            "  LowerZBound: -2.5\n"
+            "  UpperZBound: 5.0\n"
             "  InitialRefinement: 2\n"
             "  InitialGridPoints: [4,4,3]\n"
             "  UseEquiangularMap: " +
             std::string{equiangular_map ? "true" : "false"} +
             "\n"
             "  RadialPartitioning: []\n"
-            "  HeightPartitioning: []\n"
+            "  PartitioningInZ: []\n"
             "  RadialDistribution: [Linear]\n" +
             std::string{
                 with_boundary_conditions
@@ -350,18 +350,19 @@ void test_cylinder_no_refinement() {
         }();
         test_cylinder_construction(
             dynamic_cast<const creators::Cylinder&>(*cylinder_factory),
-            inner_radius, outer_radius, lower_bound, upper_bound, periodic_in_z,
-            {5, grid_points}, {5, make_array<3>(refinement_level)},
-            equiangular_map, expected_boundary_conditions);
+            inner_radius, outer_radius, lower_z_bound, upper_z_bound,
+            periodic_in_z, {5, grid_points},
+            {5, make_array<3>(refinement_level)}, equiangular_map,
+            expected_boundary_conditions);
 
         if (with_boundary_conditions) {
           CHECK_THROWS_WITH(
               creators::Cylinder(
-                  inner_radius, outer_radius, lower_bound, upper_bound,
+                  inner_radius, outer_radius, lower_z_bound, upper_z_bound,
                   periodic_in_z ? std::make_unique<PeriodicBc>()
-                                : create_lower_boundary_condition(),
+                                : create_lower_z_boundary_condition(),
                   periodic_in_z ? std::make_unique<PeriodicBc>()
-                                : create_upper_boundary_condition(),
+                                : create_upper_z_boundary_condition(),
                   std::make_unique<PeriodicBc>(), refinement_level, grid_points,
                   equiangular_map, {}, {}, radial_distribution,
                   Options::Context{false, {}, 1, 1}),
@@ -369,31 +370,43 @@ void test_cylinder_no_refinement() {
                   "A Cylinder can't have periodic boundary conditions in the "
                   "radial direction."));
           CHECK_THROWS_WITH(
-              creators::Cylinder(inner_radius, outer_radius, lower_bound,
-                                 upper_bound, std::make_unique<PeriodicBc>(),
-                                 create_lower_boundary_condition(),
+              creators::Cylinder(inner_radius, outer_radius, lower_z_bound,
+                                 upper_z_bound, std::make_unique<PeriodicBc>(),
+                                 create_lower_z_boundary_condition(),
                                  create_mantle_boundary_condition(),
                                  refinement_level, grid_points, equiangular_map,
                                  {}, {}, radial_distribution,
                                  Options::Context{false, {}, 1, 1}),
               Catch::Matchers::Contains(
-                  "Either both lower and upper boundary condition must be "
-                  "periodic, or neither."));
-          CHECK_THROWS_WITH(
-              creators::Cylinder(inner_radius, outer_radius, lower_bound,
-                                 upper_bound, create_lower_boundary_condition(),
-                                 std::make_unique<PeriodicBc>(),
-                                 create_mantle_boundary_condition(),
-                                 refinement_level, grid_points, equiangular_map,
-                                 {}, {}, radial_distribution,
-                                 Options::Context{false, {}, 1, 1}),
-              Catch::Matchers::Contains(
-                  "Either both lower and upper boundary condition must be "
+                  "Either both lower and upper z-boundary condition must be "
                   "periodic, or neither."));
           CHECK_THROWS_WITH(
               creators::Cylinder(
-                  inner_radius, outer_radius, lower_bound, upper_bound,
-                  std::make_unique<NoneBc>(), create_upper_boundary_condition(),
+                  inner_radius, outer_radius, lower_z_bound, upper_z_bound,
+                  create_lower_z_boundary_condition(),
+                  std::make_unique<PeriodicBc>(),
+                  create_mantle_boundary_condition(), refinement_level,
+                  grid_points, equiangular_map, {}, {}, radial_distribution,
+                  Options::Context{false, {}, 1, 1}),
+              Catch::Matchers::Contains(
+                  "Either both lower and upper z-boundary condition must be "
+                  "periodic, or neither."));
+          CHECK_THROWS_WITH(
+              creators::Cylinder(inner_radius, outer_radius, lower_z_bound,
+                                 upper_z_bound, std::make_unique<NoneBc>(),
+                                 create_upper_z_boundary_condition(),
+                                 create_mantle_boundary_condition(),
+                                 refinement_level, grid_points, equiangular_map,
+                                 {}, {}, radial_distribution,
+                                 Options::Context{false, {}, 1, 1}),
+              Catch::Matchers::Contains(
+                  "None boundary condition is not supported. If you would like "
+                  "an outflow boundary condition, you must use that."));
+          CHECK_THROWS_WITH(
+              creators::Cylinder(
+                  inner_radius, outer_radius, lower_z_bound, upper_z_bound,
+                  create_lower_z_boundary_condition(),
+                  std::make_unique<NoneBc>(),
                   create_mantle_boundary_condition(), refinement_level,
                   grid_points, equiangular_map, {}, {}, radial_distribution,
                   Options::Context{false, {}, 1, 1}),
@@ -402,21 +415,12 @@ void test_cylinder_no_refinement() {
                   "an outflow boundary condition, you must use that."));
           CHECK_THROWS_WITH(
               creators::Cylinder(
-                  inner_radius, outer_radius, lower_bound, upper_bound,
-                  create_lower_boundary_condition(), std::make_unique<NoneBc>(),
-                  create_mantle_boundary_condition(), refinement_level,
-                  grid_points, equiangular_map, {}, {}, radial_distribution,
+                  inner_radius, outer_radius, lower_z_bound, upper_z_bound,
+                  create_lower_z_boundary_condition(),
+                  create_upper_z_boundary_condition(),
+                  std::make_unique<NoneBc>(), refinement_level, grid_points,
+                  equiangular_map, {}, {}, radial_distribution,
                   Options::Context{false, {}, 1, 1}),
-              Catch::Matchers::Contains(
-                  "None boundary condition is not supported. If you would like "
-                  "an outflow boundary condition, you must use that."));
-          CHECK_THROWS_WITH(
-              creators::Cylinder(
-                  inner_radius, outer_radius, lower_bound, upper_bound,
-                  create_lower_boundary_condition(),
-                  create_upper_boundary_condition(), std::make_unique<NoneBc>(),
-                  refinement_level, grid_points, equiangular_map, {}, {},
-                  radial_distribution, Options::Context{false, {}, 1, 1}),
               Catch::Matchers::Contains(
                   "None boundary condition is not supported. If you would like "
                   "an outflow boundary condition, you must use that."));
@@ -434,15 +438,15 @@ void test_refined_cylinder_boundaries(
   // definition of an arbitrary refined cylinder
   const double inner_radius = 0.3;
   const double outer_radius = 1.0;
-  const double lower_bound = -1.5;
-  const double upper_bound = 5.0;
+  const double lower_z_bound = -1.5;
+  const double upper_z_bound = 5.0;
   const std::vector<double> radial_partitioning = {0.7};
-  const std::vector<double> height_partitioning = {1.5};
+  const std::vector<double> partitioning_in_z = {1.5};
   const std::array<size_t, 3> refinement_level{1, 2, 3};
   const std::array<size_t, 3> expected_wedge_extents{{5, 4, 3}};
   std::vector<std::array<size_t, 3>> expected_refinement_level{
       (1 + 4 * (1 + radial_partitioning.size())) *
-          (1 + height_partitioning.size()),
+          (1 + partitioning_in_z.size()),
       refinement_level};
   // The central cubes share refinement level in x and y direction
   expected_refinement_level[0][0] = expected_refinement_level[0][1];
@@ -450,16 +454,16 @@ void test_refined_cylinder_boundaries(
   const creators::Cylinder refined_cylinder{
       inner_radius,
       outer_radius,
-      lower_bound,
-      upper_bound,
-      create_lower_boundary_condition(),
-      create_upper_boundary_condition(),
+      lower_z_bound,
+      upper_z_bound,
+      create_lower_z_boundary_condition(),
+      create_upper_z_boundary_condition(),
       create_mantle_boundary_condition(),
       refinement_level,
       expected_wedge_extents,
       use_equiangular_map,
       radial_partitioning,
-      height_partitioning,
+      partitioning_in_z,
       {domain::CoordinateMaps::Distribution::Linear,
        outer_radial_distribution}};
   test_physical_separation(refined_cylinder.create_domain().blocks());
@@ -613,10 +617,10 @@ void test_refined_cylinder_boundaries(
     for (const auto& direction_in_block : external_boundaries_in_block) {
       if (direction_in_block == Direction<3>::lower_zeta()) {
         boundary_conditions_in_block[direction_in_block] =
-            create_lower_boundary_condition();
+            create_lower_z_boundary_condition();
       } else if (direction_in_block == Direction<3>::upper_zeta()) {
         boundary_conditions_in_block[direction_in_block] =
-            create_upper_boundary_condition();
+            create_upper_z_boundary_condition();
       } else if (direction_in_block == Direction<3>::upper_xi()) {
         boundary_conditions_in_block[direction_in_block] =
             create_mantle_boundary_condition();
@@ -666,14 +670,14 @@ void test_refined_cylinder_boundaries(
   // (inner_radius, radial_partitioning.at(0)) and circularity changing from 0
   // to 1 is generated, secondly a further shell with radial boundaries
   // (radial_partitioning.at(0), outer_radius) and uniform circularity is added.
-  // this is then repeated for (lower_bound, height_partitioning.at(0)) and
-  // (height_partitioning.at(0), upper_bound)
+  // this is then repeated for (lower_z_bound, partitioning_in_z.at(0)) and
+  // (partitioning_in_z.at(0), upper_z_bound)
   coord_maps.emplace_back(make_coordinate_map_base<Frame::Logical, TargetFrame>(
       Interval3D{Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
                  Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
-                 Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+                 Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                           Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -681,7 +685,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -689,7 +693,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -697,7 +701,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -705,7 +709,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -714,7 +718,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -723,7 +727,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -732,7 +736,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -741,14 +745,14 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(make_coordinate_map_base<Frame::Logical, TargetFrame>(
       Interval3D{Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
                  Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
-                 Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+                 Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                           Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -756,7 +760,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -764,7 +768,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -772,7 +776,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -780,7 +784,7 @@ void test_refined_cylinder_boundaries(
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -789,7 +793,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -798,7 +802,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -807,7 +811,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -816,7 +820,7 @@ void test_refined_cylinder_boundaries(
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map, use_both_halves,
                   outer_radial_distribution},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
 
   test_domain_construction(domain, expected_block_neighbors,
@@ -837,10 +841,10 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
   // definition of an arbitrary refined cylinder
   const double inner_radius = 0.3;
   const double outer_radius = 1.0;
-  const double lower_bound = -1.5;
-  const double upper_bound = 5.0;
+  const double lower_z_bound = -1.5;
+  const double upper_z_bound = 5.0;
   const std::vector<double> radial_partitioning = {0.7};
-  const std::vector<double> height_partitioning = {1.5};
+  const std::vector<double> partitioning_in_z = {1.5};
   const std::vector<domain::CoordinateMaps::Distribution> radial_distribution{
       domain::CoordinateMaps::Distribution::Linear,
       domain::CoordinateMaps::Distribution::Linear};
@@ -848,12 +852,12 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
   const std::array<size_t, 3> expected_wedge_extents{{5, 4, 3}};
   const std::vector<std::array<size_t, 3>> expected_refinement_level{
       (1 + 4 * (1 + radial_partitioning.size())) *
-          (1 + height_partitioning.size()),
+          (1 + partitioning_in_z.size()),
       make_array<3>(refinement_level)};
   const creators::Cylinder refined_cylinder{inner_radius,
                                             outer_radius,
-                                            lower_bound,
-                                            upper_bound,
+                                            lower_z_bound,
+                                            upper_z_bound,
                                             std::make_unique<PeriodicBc>(),
                                             std::make_unique<PeriodicBc>(),
                                             create_mantle_boundary_condition(),
@@ -861,7 +865,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                                             expected_wedge_extents,
                                             use_equiangular_map,
                                             radial_partitioning,
-                                            height_partitioning,
+                                            partitioning_in_z,
                                             radial_distribution};
 
   const auto domain = refined_cylinder.create_domain();
@@ -1076,14 +1080,14 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
   // (inner_radius, radial_partitioning.at(0)) and circularity changing from 0
   // to 1 is generated, secondly a further shell with radial boundaries
   // (radial_partitioning.at(0), outer_radius) and uniform circularity is added.
-  // this is then repeated for (lower_bound, height_partitioning.at(0)) and
-  // (height_partitioning.at(0), upper_bound)
+  // this is then repeated for (lower_z_bound, partitioning_in_z.at(0)) and
+  // (partitioning_in_z.at(0), upper_z_bound)
   coord_maps.emplace_back(make_coordinate_map_base<Frame::Logical, TargetFrame>(
       Interval3D{Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
                  Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
-                 Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+                 Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                           Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1091,7 +1095,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1099,7 +1103,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1107,7 +1111,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1115,7 +1119,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1123,7 +1127,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1131,7 +1135,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1139,7 +1143,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1147,14 +1151,14 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, lower_bound, height_partitioning.at(0),
+          Interval{-1.0, 1.0, lower_z_bound, partitioning_in_z.at(0),
                    Distribution::Linear}}));
   coord_maps.emplace_back(make_coordinate_map_base<Frame::Logical, TargetFrame>(
       Interval3D{Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
                  Interval(-1.0, 1.0, -1.0 * inner_radius / sqrt(2.0),
                           inner_radius / sqrt(2.0), angular_distribution),
-                 Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+                 Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                           Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1162,7 +1166,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1170,7 +1174,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1178,7 +1182,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1186,7 +1190,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1194,7 +1198,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_xi(), Direction<2>::upper_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1202,7 +1206,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_eta(), Direction<2>::upper_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1210,7 +1214,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::lower_xi(), Direction<2>::lower_eta()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
   coord_maps.emplace_back(
       make_coordinate_map_base<Frame::Logical, TargetFrame>(Wedge3DPrism{
@@ -1218,7 +1222,7 @@ void test_refined_cylinder_periodic_boundaries(const bool use_equiangular_map) {
                   OrientationMap<2>{std::array<Direction<2>, 2>{
                       {Direction<2>::upper_eta(), Direction<2>::lower_xi()}}},
                   use_equiangular_map},
-          Interval{-1.0, 1.0, height_partitioning.at(0), upper_bound,
+          Interval{-1.0, 1.0, partitioning_in_z.at(0), upper_z_bound,
                    Distribution::Linear}}));
 
   test_domain_construction(domain, expected_block_neighbors,
