@@ -39,6 +39,7 @@ DomainCreator:
     RadialPartitioning: []
     PartitioningInZ: []
     RadialDistribution: [Linear]
+    DistributionInZ: [Linear]
     BoundaryConditions:
       LowerZ:
         AnalyticSolution:
